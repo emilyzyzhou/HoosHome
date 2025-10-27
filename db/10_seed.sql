@@ -53,10 +53,10 @@ INSERT INTO Chore (chore_id, home_id, title, description, due_date, recurrence) 
 
 -- 8. Populate ChoreAssignments (with corrected FK to `Chore`)
 INSERT INTO ChoreAssignment (chore_id, user_id, `status`) VALUES
-(1, 3, 'completed'),
-(2, 1, 'in progress'),
+(1, 3, 'done'),
+(2, 1, 'in_progress'),
 (3, 2, 'pending'),
-(4, 5, 'completed'),
+(4, 5, 'done'),
 (5, 6, 'pending'),
 (7, 4, 'pending');
 -- Chore 6 is unassigned
