@@ -1,5 +1,7 @@
 ALTER TABLE Lease
-  ADD CONSTRAINT chk_lease_dates CHECK (end_date > start_date),
+  ADD CONSTRAINT chk_lease_dates CHECK (end_date > start_date);
+
+ALTER TABLE Lease
   ADD CONSTRAINT chk_lease_rent CHECK (monthly_rent > 0);
 
 ALTER TABLE `Event`
@@ -9,7 +11,9 @@ ALTER TABLE Bill
   ADD CONSTRAINT chk_bill_total CHECK (total_amount > 0);
 
 ALTER TABLE BillShare
-  ADD CONSTRAINT chk_billshare_amount CHECK (amount_due > 0),
+  ADD CONSTRAINT chk_billshare_amount CHECK (amount_due > 0);
+  
+ALTER TABLE BillShare
   ADD CONSTRAINT chk_billshare_status CHECK (`status` IN ('unpaid', 'partial', 'paid'));
 
 ALTER TABLE ChoreAssignment
