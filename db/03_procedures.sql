@@ -1,4 +1,3 @@
--- 03_procedures.sql
 DELIMITER //
 
 CREATE PROCEDURE split_bill(IN p_bill_id INT)
