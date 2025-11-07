@@ -1,3 +1,72 @@
-config.php
+# --- Core ignores ---
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+package-lock.json
+
+# --- Environment / secrets ---
 .env
+server/.env
+*.env.local
+*.env.development.local
+*.env.test.local
+*.env.production.local
 private/
+
+# --- Build outputs ---
+dist/
+build/
+.next/
+out/
+coverage/
+*.tsbuildinfo
+
+# --- Logs ---
+logs/
+*.log
+*.log.*
+*.pid
+*.seed
+*.pid.lock
+
+# --- OS / editor junk ---
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/*
+!.vscode/settings.json
+*.swp
+*.swo
+
+# --- Temporary uploads ---
+tmp/
+temp/
+.cache/
+*.bak
+
+# --- Old PHP artifacts (legacy) ---
+config.php
+
+# --- Client-specific ---
+client/.next/
+client/out/
+client/node_modules/
+client/.turbo/
+client/.vercel/
+
+# --- Server-specific ---
+server/node_modules/
+server/dist/
+server/build/
+server/tmp/
+server/coverage/
+
+# --- TypeScript ---
+*.tsbuildinfo
+
+# --- Optional: Docker / AWS / misc ---
+.docker/
+*.local
+*.pem
