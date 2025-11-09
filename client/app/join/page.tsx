@@ -1,4 +1,5 @@
 // app/join/page.tsx
+import "./join.css"
 
 export default function JoinPage() {
     return (
@@ -12,5 +13,6 @@ export default function JoinPage() {
         <button> Create </button>
         {/* You can build out your join/create group UI here */}
       </div>
+      
     )
   }
