@@ -18,27 +18,40 @@ export function LoginForm({ onLoginSuccess }: LoginFormProps) {
   const [error, setError] = useState("")
   const [isLoading, setIsLoading] = useState(false)
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    setError("")
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
 
     if (!email || !password) {
-      setError("Please fill in all fields")
-      return
+      setError("Please fill in all fields");
+      return;
     }
-
     if (!email.includes("@")) {
-      setError("Please enter a valid email address")
-      return
+      setError("Please enter a valid email address");
+      return;
     }
 
-    setIsLoading(true)
-    // Simulate login delay
-    setTimeout(() => {
-      setIsLoading(false)
-      onLoginSuccess()
-    }, 800)
-  }
+    try {
+      setIsLoading(true);
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/auth/login`, {
+        method: "POST",
+        credentials: "include", // so browser accepts the httpOnly cookie
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data?.error ?? "Login failed");
+      } else {
+        onLoginSuccess(); // navigate to dashboard, etc.
+      }
+    } catch (err) {
+      setError("Network error");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50 via-amber-50 to-orange-100 dark:from-slate-950 dark:via-blue-950 dark:to-slate-900 flex items-center justify-center p-4">
