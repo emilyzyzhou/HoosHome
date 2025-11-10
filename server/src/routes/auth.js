@@ -22,19 +22,30 @@ function setAuthCookie(res, payload) {
 // POST /auth/register
 router.post("/register", async (req, res) => {
   try {
-    const { name, email, password } = req.body || {};
+    const { name, email, password, phone_number, billing_info, profile_link } = req.body || {};
     if (!name || !email || !password) {
       return res.status(400).json({ error: "Missing fields" });
     }
 
-    // Check existing
-    const [rows] = await pool.query("SELECT * FROM Users WHERE email = ? LIMIT 1", [email]);
+    // Check if email exists
+    const [rows] = await pool.query("SELECT 1 FROM Users WHERE email = ? LIMIT 1", [email]);
     if (rows.length) return res.status(409).json({ error: "Email already registered" });
 
-    const hash = await bcrypt.hash(password, 12); // cost 12 is a good default
+    const hash = await bcrypt.hash(password, 12);
+
+    // Insert — include all columns you require; use NULL for optional fields
     const [result] = await pool.query(
-      "INSERT INTO Users (name, email, password_hash) VALUES (?, ?, ?)",
-      [name, email, hash]
+      `INSERT INTO Users 
+       (name, email, password, phone_number, billing_info, profile_link)
+       VALUES (?, ?, ?, ?, ?, ?)`,
+      [
+        name,
+        email,
+        hash,
+        phone_number ?? null,
+        billing_info ?? null,
+        profile_link ?? null,
+      ]
     );
 
     setAuthCookie(res, { user_id: result.insertId, email });
@@ -44,6 +55,7 @@ router.post("/register", async (req, res) => {
     res.status(500).json({ error: "Server error" });
   }
 });
+
 
 // POST /auth/login
 router.post("/login", async (req, res) => {
@@ -56,8 +68,9 @@ router.post("/login", async (req, res) => {
     const [rows] = await pool.query("SELECT * FROM Users WHERE email = ? LIMIT 1", [email]);
     if (!rows.length) return res.status(401).json({ error: "Invalid credentials" });
 
-    const user = rows[0];
-    const ok = await bcrypt.compare(password, user.password_hash);
+  const user = rows[0];
+  // schema stores the bcrypt hash in the `password` column
+  const ok = await bcrypt.compare(password, user.password);
     if (!ok) return res.status(401).json({ error: "Invalid credentials" });
 
     setAuthCookie(res, { user_id: user.user_id, email: user.email });
