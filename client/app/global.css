@@ -1,4 +1,7 @@
-@import "tailwindcss";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 @import "tw-animate-css";
 
 @custom-variant dark (&:is(.dark *));
@@ -117,6 +120,22 @@
 }
 
 @layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
+
+    --border: 214.3 31.8% 91.4%;
+    --ring: 222.2 84% 4.9%;
+
+    /* add the rest of your tokens (card, input, primary, etc.) if you use them */
+  }
+  .dark {
+    --background: 224 71% 4%;
+    --foreground: 210 20% 98%;
+
+    --border: 216 34% 17%;
+    --ring: 216 34% 17%;
+  }
   * {
     @apply border-border outline-ring/50;
   }
