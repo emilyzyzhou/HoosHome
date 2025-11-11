@@ -2,6 +2,7 @@ import { Router } from "express";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import { pool } from "../db/pool.js";
+import { loginLimiter } from "../middleware/rateLimiter.js"; // ✅ Import the limiter
 
 const router = Router();
 const TOKEN_COOKIE = "hh_token";

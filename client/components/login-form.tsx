@@ -18,6 +18,7 @@ export function LoginForm({ onLoginSuccess }: LoginFormProps) {
   const [error, setError] = useState("")
   const [isLoading, setIsLoading] = useState(false)
 
+
 const handleSubmit = async (e: React.FormEvent) => {
   e.preventDefault();
   setError("");
@@ -40,9 +41,21 @@ const handleSubmit = async (e: React.FormEvent) => {
       body: JSON.stringify({ email, password }),
     });
 
-    const data = await res.json();
+    // 🔍 Debug raw response text
+    const text = await res.text();
+    console.log("Raw response:", text);
+    console.log("Status:", res.status, "URL:", res.url);
 
-    // rate limiter error response
+    let data: any;
+    try {
+      data = JSON.parse(text);
+    } catch {
+      console.error("Not JSON response from server!");
+      setError("Server returned unexpected response. Check API URL or server logs.");
+      return;
+    }
+
+    // handle rate limit or login errors
     if (res.status === 429) {
       setError(data?.error || "Too many login attempts. Try again later.");
       return;
@@ -60,6 +73,7 @@ const handleSubmit = async (e: React.FormEvent) => {
     setIsLoading(false);
   }
 };
+
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50 via-amber-50 to-orange-100 dark:from-slate-950 dark:via-blue-950 dark:to-slate-900 flex items-center justify-center p-4">
