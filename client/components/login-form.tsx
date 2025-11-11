@@ -41,7 +41,7 @@ const handleSubmit = async (e: React.FormEvent) => {
       body: JSON.stringify({ email, password }),
     });
 
-    // 🔍 Debug raw response text
+    // Debug raw response text
     const text = await res.text();
     console.log("Raw response:", text);
     console.log("Status:", res.status, "URL:", res.url);
