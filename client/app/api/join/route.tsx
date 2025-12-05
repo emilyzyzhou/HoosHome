@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import dbPool from '@/app/lib/db'; 
+import {pool} from '../../../../server/src/db/pool.js'; 
 
 export async function POST(request: Request) {
   try {
@@ -13,7 +13,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const [rows] = await dbPool.query(
+    const [rows] = await pool.query(
       'SELECT * FROM Homes WHERE join_code = ?', 
       [joinCode]
     );
