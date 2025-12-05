@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import dbPool from '@/app/lib/db'; 
+import {pool} from '../../../../server/src/db/pool.js'; 
 import type { ResultSetHeader } from 'mysql2';
 
 export async function POST(request: Request) {
@@ -19,7 +19,7 @@ export async function POST(request: Request) {
     const joinCode = Math.floor(100000 + Math.random() * 900000).toString();
 
     // inserting into database
-    const [result] = await dbPool.query(
+    const [result] = await pool.query(
       'INSERT INTO Homes (name, address, join_code) VALUES (?, ?, ?)',
       [homeName, homeAddress, joinCode]
     );
