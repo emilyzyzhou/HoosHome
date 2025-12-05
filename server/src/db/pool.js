@@ -11,10 +11,13 @@ console.log('DB CONFIG AT RUNTIME:', {
 export const pool = mysql.createPool({
   host: process.env.DB_HOST,                      // Cloud SQL IP in Cloud Run
   port: Number(process.env.DB_PORT || 3306),
+  host: process.env.DB_HOST,                      // Cloud SQL IP in Cloud Run
+  port: Number(process.env.DB_PORT || 3306),
   user: process.env.DB_USER,
-  password: process.env.DB_PASSWORD,
+  password: process.env.DB_PASS,
   database: process.env.DB_NAME,
   connectionLimit: 10,
+  namedPlaceholders: true,
   namedPlaceholders: true,
 });
 
