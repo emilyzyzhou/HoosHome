@@ -1,4 +1,4 @@
-import { pool } from "./pool.js";
+import { pool } from "../db/pool.js";
 
 export async function getAllUsers() {
     const [result] = await pool.query("SELECT * FROM Users");
