@@ -1,5 +1,13 @@
 import mysql from "mysql2/promise";
 
+console.log('DB CONFIG AT RUNTIME:', {
+  host: process.env.DB_HOST,
+  user: process.env.DB_USER,
+  db: process.env.DB_NAME,
+  passLength: process.env.DB_PASS ? process.env.DB_PASS.length : 0,
+  passPreview: process.env.DB_PASS ? process.env.DB_PASS.slice(0, 3) : null,
+});
+
 export const pool = mysql.createPool({
   host: process.env.DB_HOST,                      // Cloud SQL IP in Cloud Run
   port: Number(process.env.DB_PORT || 3306),
