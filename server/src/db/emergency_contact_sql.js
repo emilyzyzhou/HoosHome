@@ -17,18 +17,18 @@ export async function getEmergencyContactsByUserIDAndContactID(user_id, contact_
     return result;
 }
 
-export async function addEmergencyContact(user_id, name, email, phone_number, relationship) {
+export async function addEmergencyContact(user_id, name, email, phone_number, relation_to_user) {
     const [result] = await pool.query(
         "INSERT INTO EmergencyContact (user_id, name, email, phone_number, relation_to_user) VALUES (?, ?, ?, ?, ?)",
-        [user_id, name, email ?? null, phone_number, relationship ?? null]
+        [user_id, name, email ?? null, phone_number, relation_to_user ?? null]
     );
     return result;
 }
 
-export async function updateEmergencyContact(user_id, contact_id, name, email, phone_number, relationship) {
+export async function updateEmergencyContact(user_id, contact_id, name, email, phone_number, relation_to_user) {
     const [result] = await pool.query(
         "UPDATE EmergencyContact SET name = ?, email = ?, phone_number = ?, relation_to_user = ? WHERE user_id = ? AND contact_id = ?",
-        [name, email ?? null, phone_number, relationship ?? null, user_id, contact_id]
+        [name, email ?? null, phone_number, relation_to_user ?? null, user_id, contact_id]
     );
     return result;
 }
