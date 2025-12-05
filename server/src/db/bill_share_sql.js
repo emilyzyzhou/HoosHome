@@ -39,12 +39,3 @@ export async function removeBillShare(bill_id, user_id) {
     );
     return result;
 }
-
-// ADVANCED SQL ONE TO CALL THE STORED PROCEDURE
-export async function splitBill(bill_id) {
-    const [result] = await pool.query(
-        "CALL split_bill(?)",
-        [bill_id]
-    );
-    return result;
-}

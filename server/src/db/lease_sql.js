@@ -1,4 +1,4 @@
-import { pool } from "../db/pool.js";
+import { pool } from "./pool.js";
 
 // again not sure how impotant this is but including bc both are in pkey
 export async function getLeaseByID(lease_id, home_id) {

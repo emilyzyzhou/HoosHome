@@ -1,4 +1,4 @@
-import { pool } from "../db/pool.js";
+import { pool } from "./pool.js";
 
 export async function getLandlordByID(landlord_id) {
     const [result] = await pool.query(
