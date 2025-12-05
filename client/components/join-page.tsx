@@ -30,7 +30,7 @@ export default function JoinPage() {
     }
 
     try {
-      const response = await fetch('/api/join', {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/home/join`, {
         method: 'POST', 
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ joinCode: joinCode }), 
@@ -68,8 +68,7 @@ export default function JoinPage() {
     }
 
     try {
-      // Next.js API route call
-      const response = await fetch('/api/create-home', {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/home/create-home`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
