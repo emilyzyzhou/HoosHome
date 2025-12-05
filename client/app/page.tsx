@@ -2,22 +2,22 @@
 
 import { useState } from "react"
 import { LoginForm } from "@/components/login-form"
+import JoinPage from "@/components/join-page" 
 import { useRouter } from "next/navigation"
 // import { Dashboard } from "@/components/dashboard"
+type AppState = 'login' | 'join' | 'dashboard';
 
 export default function Home() {
   const router = useRouter()
-
-  const handleLogin = () => {
-    router.push("/join")
+  const [appState, setAppState] = useState<AppState>('login') 
+  const handleLoginSuccess = () => {
+    setAppState('join');
   }
-
-  //const [isLoggedIn, setIsLoggedIn] = useState(false)
-
-  //if (!isLoggedIn) {
-    //return <LoginForm onLoginSuccess={() => setIsLoggedIn(true)} />
-  //}
-  return <LoginForm onLoginSuccess={handleLogin} />
-
-  // return <Dashboard onLogout={() => setIsLoggedIn(false)} />
+  if (appState === 'login') {
+      return <LoginForm onLoginSuccess={handleLoginSuccess} />
+  }
+  if (appState === 'join') {
+      return <JoinPage /> 
+  }
+  return <LoginForm onLoginSuccess={handleLoginSuccess} />
 }
