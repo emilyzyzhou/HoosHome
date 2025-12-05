@@ -1,4 +1,4 @@
-import { pool } from "../db/pool.js";
+import { pool } from "./pool.js";
 
 export async function getEmergencyContactsByUserID(user_id) {
     const [result] = await pool.query(
