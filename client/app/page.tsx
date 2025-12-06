@@ -11,19 +11,27 @@ type AppState = 'login' | 'join' | 'dashboard' | 'chore';
 
 export default function Home() {
   const router = useRouter()
+  const [homeId, setHomeId] = useState<number |null>(null);
   const [appState, setAppState] = useState<AppState>('login') 
+
   const handleLoginSuccess = () => {
+    setAppState('join');
+  }
+
+  const handleHomeJoined = (id: number) => {
+    setHomeId(id);
     setAppState('chore');
   }
+
   if (appState === 'login') {
       return <LoginForm onLoginSuccess={handleLoginSuccess} />
   }
   if (appState === 'join') {
-      return <JoinPage /> 
+      return <JoinPage onHomeJoined={handleHomeJoined} /> 
   }
 
   if (appState === 'chore') {
-    return <ChorePage /> 
+    return <ChorePage homeId={homeId}/> 
 }
   return <LoginForm onLoginSuccess={handleLoginSuccess} />
 }

@@ -1,12 +1,11 @@
 "use client"
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect} from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ListChecks, Trash2, PlusCircle, Loader2 } from "lucide-react";
 
-const DEMO_HOME_ID = 2; 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE || ''; 
 
 interface Chore {
@@ -16,21 +15,25 @@ interface Chore {
     home_id: number;
 }
 
-export function ChorePage() {
+interface ChorePageProps {
+    homeId: number | null;
+}
+
+export function ChorePage({homeId}: ChorePageProps) {
     const [chores, setChores] = useState<Chore[]>([]);
     const [newChoreTitle, setnewChoreTitle] = useState('');
     const [loading, setLoading] = useState(true);
     const [adding, setAdding] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
-    const HOME_ID_TO_USE = useMemo(() => {
-        return DEMO_HOME_ID; 
-    }, []);
+    const HOME_ID_TO_USE = homeId;
 
-    // 1. Fetch Chores on Load
     useEffect(() => {
         const fetchChores = async () => {
-            if (HOME_ID_TO_USE === 0) return; // Prevent fetching if homeId is missing
+            if (!HOME_ID_TO_USE) {
+                setLoading(false);
+                return;
+            }
             setLoading(true);
             setError(null);
             try {
@@ -53,10 +56,10 @@ export function ChorePage() {
         fetchChores();
     }, [HOME_ID_TO_USE]);
 
-    // 2. Add Chore Handler
+    // Add Chore Handler
     const handleAddChore = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!newChoreTitle.trim()) return;
+        if (!newChoreTitle.trim() || !HOME_ID_TO_USE) return;
         setAdding(true);
         setError(null);
 
@@ -88,7 +91,7 @@ export function ChorePage() {
         }
     };
 
-    // 3. Delete Chore Handler
+    // Delete Chore Handler
     const handleDeleteChore = async (choreId: number) => {
         setError(null);
         
@@ -120,9 +123,11 @@ export function ChorePage() {
                     <CardTitle className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-900 to-orange-600 dark:from-orange-300 dark:to-amber-300 flex items-center gap-3">
                         <ListChecks className="w-8 h-8"/> Chore Board
                     </CardTitle>
+                    {HOME_ID_TO_USE && ( 
                     <div className="text-sm font-medium text-muted-foreground bg-orange-200/50 dark:bg-blue-800/20 p-2 rounded-lg">
                         Home ID: {HOME_ID_TO_USE}
                     </div>
+                    )}
                 </CardHeader>
 
                 <CardContent className="space-y-6">
