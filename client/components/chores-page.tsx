@@ -234,13 +234,6 @@ export function ChorePage({homeId}: ChorePageProps) {
 
                 <Card className="border-orange-100 dark:border-blue-800 shadow-lg">
                     <CardHeader className="bg-gradient-to-r from-orange-50 to-amber-50 dark:from-blue-900/20 dark:to-blue-800/20 space-y-4">
-                        <div className="flex items-center justify-between">
-                            <CardTitle className="flex items-center gap-2 text-blue-900 dark:text-orange-200">
-                                <ListChecks className="w-6 h-6" />
-                                Household Chores
-                            </CardTitle>
-                        </div>
-                        
                         {/* --- FILTERS TOOLBAR --- */}
                         <div className="flex flex-col md:flex-row gap-3">
                             {/* Search */}
