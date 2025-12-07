@@ -147,10 +147,10 @@ export function CreateBillModal({
     // Calculate bill shares
     let shares: BillShare[] = []
     if (splitRule === "equal") {
-      const shareAmount = total / selectedRoommates.size
+      // if equal just gonna call stored procedure later
       shares = Array.from(selectedRoommates).map(userId => ({
         user_id: userId,
-        amount_due: shareAmount,
+        amount_due: 0,
         status: shareStatuses.get(userId) || "unpaid",
       }))
     } else {

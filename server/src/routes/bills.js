@@ -175,7 +175,7 @@ router.post("/", requireAuth, async (req, res) => {
 
     // Validate share amounts
     for (const share of shares) {
-      if (!share.amount_due || share.amount_due <= 0) {
+      if (split_rule === "custom" && (!share.amount_due || share.amount_due <= 0)) {
         conn.release();
         return res.status(400).json({ 
           error: "All roommate shares must be greater than $0.00. Please adjust the split amounts." 
@@ -201,22 +201,32 @@ router.post("/", requireAuth, async (req, res) => {
     const billId = billResult.insertId;
     console.log("Created bill with id:", billId);
 
-    // Insert shares ONE BY ONE (simple + reliable)
-    for (const share of shares) {
-      console.log("Inserting share row:", {
-        bill_id: billId,
-        user_id: share.user_id,
-        amount_due: share.amount_due,
-        status: share.status || "unpaid",
-      });
+    // need to commit here to use the stored procedure
+    await conn.commit();
 
-      await conn.query(
-        `
-        INSERT INTO BillShare (bill_id, user_id, amount_due, status)
-        VALUES (?, ?, ?, ?)
-        `,
-        [billId, share.user_id, share.amount_due, share.status || "unpaid"]
-      );
+    // if its equal use the stored procedure - if not just slam em in
+    if (split_rule === "equal") {
+      // stored procedure prayge
+      await splitBill(billId);
+      console.log("Called split_bill stored procedure for bill", billId);
+    } else {
+      // Insert shares ONE BY ONE (simple + reliable)
+      for (const share of shares) {
+        console.log("Inserting custom share row:", {
+          bill_id: billId,
+          user_id: share.user_id,
+          amount_due: share.amount_due,
+          status: share.status || "unpaid",
+        });
+
+        await conn.query(
+          `
+          INSERT INTO BillShare (bill_id, user_id, amount_due, status)
+          VALUES (?, ?, ?, ?)
+          `,
+          [billId, share.user_id, share.amount_due, share.status || "unpaid"]
+        );
+      }
     }
 
     await conn.commit();
@@ -281,30 +291,38 @@ router.put("/:billId", requireAuth, async (req, res) => {
 
     // if shares provided, replace them entirely
     if (Array.isArray(shares) && shares.length > 0) {
-      // Validate share amounts
-      for (const share of shares) {
-        if (!share.amount_due || share.amount_due <= 0) {
-          await conn.rollback();
-          conn.release();
-          return res.status(400).json({ 
-            error: "All roommate shares must be greater than $0.00. Please adjust the split amounts." 
-          });
-        }
-      }
-
       await conn.query("DELETE FROM BillShare WHERE bill_id = ?", [billId]);
 
-      const shareValues = shares.map((s) => [
-        billId,
-        s.user_id,
-        s.amount_due,
-        s.status || "unpaid",
-      ]);
+      if (split_rule === "equal") {
+        // Use stored procedure for equal split
+        await conn.query("CALL split_bill(?)", [billId]);
+        console.log("Called split_bill stored procedure for updated bill", billId);
+      } else {
+        // Validate share amounts
+        for (const share of shares) {
+          if (!share.amount_due || share.amount_due <= 0) {
+            await conn.rollback();
+            conn.release();
+            return res.status(400).json({ 
+              error: "All roommate shares must be greater than $0.00. Please adjust the split amounts." 
+            });
+          }
+        }
+        
+      await conn.query("DELETE FROM BillShare WHERE bill_id = ?", [billId]);
 
-      await conn.query(
-        "INSERT INTO BillShare (bill_id, user_id, amount_due, status) VALUES ?",
-        [shareValues]
-      );
+        const shareValues = shares.map((s) => [
+          billId,
+          s.user_id,
+          s.amount_due,
+          s.status || "unpaid",
+        ]);
+
+        await conn.query(
+          "INSERT INTO BillShare (bill_id, user_id, amount_due, status) VALUES ?",
+          [shareValues]
+        );
+      }
     }
 
     await conn.commit();
