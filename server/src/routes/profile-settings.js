@@ -12,7 +12,7 @@ router.get("/get-info", async (req, res) => {
   const token = req.cookies?.[TOKEN_COOKIE];
   const payload = jwt.verify(token, process.env.JWT_SECRET);
   const userID = payload.user_id; 
-  console.log(payload);
+  // console.log(payload);
   try {
     const [user] = await getUserByID(userID)
     return res.json({ 
