@@ -1,6 +1,9 @@
 import { Router } from "express";
 import { pool } from "../db/pool.js";
 import jwt from "jsonwebtoken";
+import { getHomeByJoinCode } from "../db/home_sql.js";
+import { addUserToHome, getAllHomesForUser, getAllUsersInHome } from "../db/home_membership_sql.js";
+import { addHome } from "../db/home_sql.js";
 
 function getUserIdFromRequest(req) {
   const token = req.cookies?.hh_token;
@@ -13,7 +16,6 @@ const router = Router();
 
 // POST /home/join
 router.post("/join", async (req, res) => {
-  let conn;
   try {
     const userId = getUserIdFromRequest(req);
     if (!userId) {
@@ -29,58 +31,31 @@ router.post("/join", async (req, res) => {
         .json({ success: false, message: "Join code is required." });
     }
 
-    conn = await pool.getConnection();
-    await conn.beginTransaction();
-
     // Find home by join code
-    const [rows] = await conn.query(
-      "SELECT * FROM Homes WHERE join_code = ?",
-      [joinCode]
-    );
+    const home = await getHomeByJoinCode(joinCode);
 
-    if (rows.length === 0) {
-      await conn.rollback();
-      conn.release();
+    if (home.length === 0) {
       return res
         .status(404)
         .json({ success: false, message: "Invalid join code." });
     }
 
-    const home = rows[0];
-
     // Insert or ensure membership for this user in this home
-    await conn.query(
-      `INSERT INTO HomeMembership (home_id, user_id)
-       VALUES (?, ?)
-       ON DUPLICATE KEY UPDATE home_id = home_id`,
-      [home.id, userId]
-    );
-
-    await conn.commit();
-    conn.release();
+    await addUserToHome(home[0].home_id, userId, new Date().toISOString(), null);
 
     console.log("User joined home:", { userId, homeId: home.id });
 
     return res.json({ success: true, home_id: home.id });
   } catch (error) {
     console.error("Home Join Error:", error);
-    if (conn) {
-      try {
-        await conn.rollback();
-        conn.release();
-      } catch (_) {
-        // ignore rollback errors
-      }
-    }
-    return res
-      .status(500)
-      .json({ success: false, message: "An internal server error occurred." });
   }
+  return res
+    .status(500)
+    .json({ success: false, message: "An internal server error occurred." });
 });
 
 // POST /home/create-home
 router.post("/create-home", async (req, res) => {
-  let conn;
   try {
     const userId = getUserIdFromRequest(req);
     if (!userId) {
@@ -102,27 +77,12 @@ router.post("/create-home", async (req, res) => {
     // random 6-digit join code
     const joinCode = Math.floor(100000 + Math.random() * 900000).toString();
 
-    conn = await pool.getConnection();
-    await conn.beginTransaction();
-
     // Insert new home
-    const [result] = await conn.query(
-      "INSERT INTO Homes (name, address, join_code) VALUES (?, ?, ?)",
-      [homeName, homeAddress, joinCode]
-    );
-
+    const result = await addHome(joinCode, homeName, homeAddress);
     const insertId = result.insertId;
 
     // Insert membership for the creator
-    await conn.query(
-      `INSERT INTO HomeMembership (home_id, user_id)
-       VALUES (?, ?)
-       ON DUPLICATE KEY UPDATE home_id = home_id`,
-      [insertId, userId]
-    );
-
-    await conn.commit();
-    conn.release();
+    await addUserToHome(insertId, userId, new Date().toISOString(), null);
 
     const affectedRows = result.affectedRows;
 
@@ -142,27 +102,19 @@ router.post("/create-home", async (req, res) => {
     }
   } catch (error) {
     console.error("Home Create Error:", error);
-    if (conn) {
-      try {
-        await conn.rollback();
-        conn.release();
-      } catch (_) {
-        // ignore rollback errors
-      }
-    }
+  }
 
-    if (error.code === "ER_DUP_ENTRY") {
-      return res.status(500).json({
-        success: false,
-        message: "A duplicate join code was generated. Please try again.",
-      });
-    }
-
+  if (error.code === "ER_DUP_ENTRY") {
     return res.status(500).json({
       success: false,
-      message: "An internal server error occurred.",
+      message: "A duplicate join code was generated. Please try again.",
     });
   }
+
+  return res.status(500).json({
+    success: false,
+    message: "An internal server error occurred.",
+  });
 });
 
 // GET /home/roommates - Get all roommates in user's home
@@ -174,10 +126,7 @@ router.get("/roommates", async (req, res) => {
     }
 
     // Get user's home_id
-    const [userHome] = await pool.query(
-      "SELECT home_id FROM HomeMembership WHERE user_id = ? LIMIT 1",
-      [userId]
-    );
+    const userHome = await getAllHomesForUser(userId);
 
     if (userHome.length === 0) {
       // User not in any home yet → no roommates
@@ -187,14 +136,7 @@ router.get("/roommates", async (req, res) => {
     const homeId = userHome[0].home_id;
 
     // Get all users in the same home
-    const [roommates] = await pool.query(
-      `SELECT u.user_id, u.name
-       FROM Users u
-       JOIN HomeMembership hm ON u.user_id = hm.user_id
-       WHERE hm.home_id = ?
-       ORDER BY u.name`,
-      [homeId]
-    );
+    const roommates = await getAllUsersInHome(homeId);
 
     return res.json({ roommates });
   } catch (error) {

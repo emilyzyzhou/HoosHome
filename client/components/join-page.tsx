@@ -34,6 +34,7 @@ export default function JoinPage() {
     try {
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/home/join`, {
         method: 'POST', 
+        credentials: "include",
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ joinCode: joinCode }), 
       });
@@ -72,6 +73,7 @@ export default function JoinPage() {
     try {
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/home/create-home`, {
         method: 'POST',
+        credentials: "include",
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
           homeName: homeName, 
