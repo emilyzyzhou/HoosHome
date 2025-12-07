@@ -4,20 +4,36 @@ import { useState, useEffect} from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ListChecks, Trash2, PlusCircle, Loader2 } from "lucide-react";
+import { ListChecks, Trash2, PlusCircle, Loader2, Repeat, Calendar, AlignLeft } from "lucide-react";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE || ''; 
 
 interface Chore {
     chore_id: number;
     title: string;
-    due_date: string;
+    due_date: string | null;
     home_id: number;
+    description: string | null;
+    recurrence: string | null;
 }
 
 interface ChorePageProps {
     homeId: number | null;
 }
+
+const formatDate = (dateString: string | null) => {
+    if (!dateString) return "N/A";
+    try {
+        const date = new Date(dateString);
+        return date.toLocaleDateString('en-US', { 
+            month: 'short', 
+            day: 'numeric', 
+            year: 'numeric' 
+        });
+    } catch {
+        return dateString; 
+    }
+};
 
 export function ChorePage({homeId}: ChorePageProps) {
     const [chores, setChores] = useState<Chore[]>([]);
@@ -76,7 +92,9 @@ export function ChorePage({homeId}: ChorePageProps) {
                     ...prev, 
                     { 
                         ...data.chore, 
-                        created_at: new Date().toISOString()
+                        description: null,
+                        due_date: '2025-10-28',
+                        recurrence: 'Weekly'
                     }
                 ]);
                 setnewChoreTitle('');
@@ -114,6 +132,8 @@ export function ChorePage({homeId}: ChorePageProps) {
             setChores(originalChores); // Revert on error
         }
     };
+    // update chore handler: TODO
+
 
 
     return (
@@ -159,6 +179,18 @@ export function ChorePage({homeId}: ChorePageProps) {
 
                     {/* Chore List Display */}
                     <div className="space-y-3 pt-4">
+                        
+                        {/* 2. Render List with Columns */}
+                        {chores.length > 0 && (
+                            // Add column headers
+                            <div className="grid grid-cols-12 font-semibold text-xs text-muted-foreground uppercase py-2 border-b dark:border-blue-800/50">
+                                <div className="col-span-4 pl-3">Chore</div>
+                                <div className="col-span-3">Due Date</div>
+                                <div className="col-span-3">Recurrence</div>
+                                <div className="col-span-2 text-right pr-3">Actions</div>
+                            </div>
+                        )}
+
                         {loading ? (
                             <div className="flex items-center justify-center p-8 text-muted-foreground">
                                 <Loader2 className="w-6 h-6 mr-2 animate-spin" /> Loading Chores...
@@ -170,18 +202,44 @@ export function ChorePage({homeId}: ChorePageProps) {
                         ) : (
                             <ul className="space-y-2">
                                 {chores.map((chore) => (
-                                    <li key={chore.chore_id} className="flex items-center justify-between p-3 bg-white dark:bg-blue-900/10 border border-orange-100 dark:border-blue-800/50 rounded-lg shadow-sm hover:shadow-md transition-shadow">
-                                        <span className="font-medium text-blue-900 dark:text-orange-100">
-                                            {chore.title}
-                                        </span>
-                                        <Button
-                                            variant="ghost"
-                                            size="sm"
-                                            onClick={() => handleDeleteChore(chore.chore_id)}
-                                            className="text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20"
-                                        >
-                                            <Trash2 className="w-4 h-4" />
-                                        </Button>
+                                    <li key={chore.chore_id} className="grid grid-cols-12 items-center p-3 bg-white dark:bg-blue-900/10 border border-orange-100 dark:border-blue-800/50 rounded-lg shadow-sm hover:shadow-md transition-shadow">
+                                        
+                                        {/* TITLE & DESCRIPTION */}
+                                        <div className="col-span-4 flex flex-col pl-3">
+                                            <span className="font-semibold text-blue-900 dark:text-orange-100">
+                                                {chore.title}
+                                            </span>
+                                            {chore.description && (
+                                                <span className="text-xs text-muted-foreground flex items-center gap-1 mt-1">
+                                                    <AlignLeft className="w-3 h-3 text-gray-500 dark:text-gray-400" />
+                                                    {chore.description}
+                                                </span>
+                                            )}
+                                        </div>
+
+                                        {/* DUE DATE */}
+                                        <div className="col-span-3 text-sm flex items-center gap-2">
+                                            <Calendar className="w-4 h-4 text-orange-500 dark:text-amber-400" />
+                                            {formatDate(chore.due_date)}
+                                        </div>
+
+                                        {/* RECURRENCE */}
+                                        <div className="col-span-3 text-sm flex items-center gap-2">
+                                            <Repeat className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                                            {chore.recurrence || "One-time"}
+                                        </div>
+
+                                        {/* ACTIONS */}
+                                        <div className="col-span-2 flex justify-end pr-3">
+                                            <Button
+                                                variant="ghost"
+                                                size="sm"
+                                                onClick={() => handleDeleteChore(chore.chore_id)}
+                                                className="text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20"
+                                            >
+                                                <Trash2 className="w-4 h-4" />
+                                            </Button>
+                                        </div>
                                     </li>
                                 ))}
                             </ul>

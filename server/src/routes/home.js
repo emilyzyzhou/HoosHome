@@ -22,7 +22,7 @@ router.post("/join", async (req, res) => {
     if (homes.length > 0) {
       const home = homes[0];
       console.log("Found home:", home);
-      return res.json({ success: true, home_id: home.id });
+      return res.json({ success: true, home_id: home.home_id });
     } else {
       return res.status(404).json({ success: false, message: "Invalid join code." });
     }

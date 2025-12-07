@@ -44,6 +44,9 @@ router.post("/:homeId", async (req, res) => {
         chore_id: result.insertId,
         title: title,
         home_id: homeId,
+        description: null,
+        due_date: "2025-10-28",
+        recurrence: "Weekly",
       }
     });
   } catch (e) {
