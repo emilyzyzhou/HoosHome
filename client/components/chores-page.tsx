@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect} from 'react';
+import { useState, useEffect, useMemo} from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -50,6 +50,7 @@ export function ChorePage({homeId}: ChorePageProps) {
     const [loading, setLoading] = useState(true);
     const [adding, setAdding] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [searchTerm, setSearchTerm] = useState('');
 
     const [editingChoreId, setEditingChoreId] = useState<number | null>(null);
     const [formData, setFormData] = useState<ChoreFormData>({ 
@@ -207,6 +208,23 @@ export function ChorePage({homeId}: ChorePageProps) {
         setEditingChoreId(null);
         setIsUpdating(false);
     };
+    // search 
+    const searchChores = useMemo(() => {
+        if (!searchTerm) {
+            return chores;
+        }
+        const lowerCaseSearch = searchTerm.toLowerCase();
+
+        return chores.filter(chore => {
+            const titleMatch = chore.title.toLowerCase().includes(lowerCaseSearch);
+            
+            const descriptionMatch = chore.description 
+                ? chore.description.toLowerCase().includes(lowerCaseSearch)
+                : false;
+            
+            return titleMatch || descriptionMatch;
+        });
+    }, [chores, searchTerm]);
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-orange-50 via-amber-50 to-orange-100 dark:from-slate-950 dark:via-blue-950 dark:to-slate-900 flex flex-col items-center p-8">
@@ -246,11 +264,29 @@ export function ChorePage({homeId}: ChorePageProps) {
                             Add
                         </Button>
                     </form>
+                    {/* Search Bar */}
+                    <div className="relative">
+                        <svg 
+                            xmlns="http://www.w3.org/2000/svg" 
+                            className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" 
+                            fill="none" 
+                            viewBox="0 0 24 24" 
+                            stroke="currentColor"
+                        >
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                        </svg>
+                        <Input
+                            type="text"
+                            placeholder="Search chores by name or description..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            className="w-full pl-10 bg-white dark:bg-blue-900/30 border-orange-200 dark:border-blue-800 focus:ring-orange-500 dark:focus:ring-orange-400"
+                        />
+                    </div>
                     {/* Chore List Display */}
                     <div className="space-y-3 pt-4">
                         {/* 2. Render List with Columns */}
-                        {chores.length > 0 && (
-                            // Add column headers
+                        {searchChores.length > 0 && (
                             <div className="grid grid-cols-12 font-semibold text-xs text-muted-foreground uppercase py-2 border-b dark:border-blue-800/50">
                                 <div className="col-span-3 pl-3">Chore</div>
                                 <div className="col-span-2">Due Date</div>
@@ -265,13 +301,14 @@ export function ChorePage({homeId}: ChorePageProps) {
                             <div className="flex items-center justify-center p-8 text-muted-foreground">
                                 <Loader2 className="w-6 h-6 mr-2 animate-spin" /> Loading Chores...
                             </div>
-                        ) : chores.length === 0 ? (
+                        ) : searchChores.length === 0 ? (
+                            // 2. Updated Empty/No Results Messages
                             <p className="text-center text-muted-foreground p-8">
-                                No chores yet! Add the first task above.
+                                {searchTerm ? `No chores found matching "${searchTerm}".` : "No chores yet! Add the first task above."}
                             </p>
-                        ) : chores.length > 0 && (
+                        ): (
                                 <ul className="space-y-2">
-                                    {chores.map((chore) => (
+                                    {searchChores.map((chore) => (
                                         // 1. Conditional rendering: Show form OR static details
                                         chore.chore_id === editingChoreId ? (
                                             <EditChoreForm
