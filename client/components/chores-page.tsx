@@ -17,7 +17,7 @@ interface Chore {
     description: string | null;
     recurrence: string | null;
     user_id: number | null;
-    is_completed: 0 | 1 | null ;
+    status: string | null ;
 }
 
 interface ChorePageProps {
@@ -42,6 +42,8 @@ interface ChoreFormData {
     description: string;
     due_date: string;
     recurrence: string;
+    user_id: string;
+    status: string;
 }
 
 export function ChorePage({homeId}: ChorePageProps) {
@@ -51,17 +53,43 @@ export function ChorePage({homeId}: ChorePageProps) {
     const [adding, setAdding] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [searchTerm, setSearchTerm] = useState('');
+    const [users, setUsers] = useState<{user_id: number, name: string}[]>([]);
 
     const [editingChoreId, setEditingChoreId] = useState<number | null>(null);
     const [formData, setFormData] = useState<ChoreFormData>({ 
         title: '', 
         description: '', 
         due_date: '', 
-        recurrence: '' 
+        recurrence: '',
+        user_id: '',
+        status: 'Pending'
     });
     const [isUpdating, setIsUpdating] = useState(false);
+    
 
     const HOME_ID_TO_USE = homeId;
+    useEffect(() => {
+        const fetchUsers = async () => {
+            if (!HOME_ID_TO_USE) return;
+    
+            try {
+                const res = await fetch(`${API_BASE_URL}/home/${HOME_ID_TO_USE}/users`);
+                const data = await res.json();
+    
+                if (res.ok && data.success) {
+                    setUsers(data.users);
+                } else {
+                    console.error("Failed to fetch users:", data.message);
+                    setUsers([]); 
+                }
+            } catch (err) {
+                console.error("Fetch Users Error:", err);
+                setUsers([]);
+            }
+        };
+    
+        fetchUsers();
+    }, [HOME_ID_TO_USE]);
 
     useEffect(() => {
         const fetchChores = async () => {
@@ -161,6 +189,8 @@ export function ChorePage({homeId}: ChorePageProps) {
             // yyyy-mm-dd
             due_date: chore.due_date ? new Date(chore.due_date).toISOString().split('T')[0] : '', 
             recurrence: chore.recurrence || 'One-time',
+            user_id: chore.user_id ? String(chore.user_id) : '',
+            status: chore.status || 'Pending',
         });
         setError(null);
     };
@@ -168,40 +198,120 @@ export function ChorePage({homeId}: ChorePageProps) {
         const { name, value } = e.target;
         setFormData(prev => ({ ...prev, [name]: value }));
     };
+
+    const handleAssignmentAction = async (method: 'DELETE' | 'POST' | 'PUT', path: string, body: any) => {
+        try {
+            const res = await fetch(`${API_BASE_URL}${path}`, {
+                method: method,
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(body),
+            });
+            
+            if (method === 'DELETE' && (res.status === 404 || res.status === 409)) {
+                return res;
+            }
+
+            if (!res.ok) {
+                
+                let errorMessage = `API call failed with status ${res.status} on ${method} ${path}`;
+
+                const contentType = res.headers.get('content-type');
+                if (contentType && contentType.includes('application/json')) {
+                    try {
+                        const data = await res.json();
+                        errorMessage = data.message || errorMessage;
+                    } catch (e) {
+                        errorMessage += " (Response body was not valid JSON)";
+                    }
+                } else {
+                    // if it's not JSON, maybe capture plain text if available
+                    // const text = await res.text();
+                    // errorMessage += ` (Body: ${text.substring(0, 50)}...)`;
+                }
+                throw new Error(errorMessage);
+            }
+            return res;
+        } catch (error) {
+            throw error;
+        }
+    };
     const handleUpdateChore = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!editingChoreId || !formData.title.trim()) return;
+
         setIsUpdating(true);
         setError(null);
-        const updatedChoreData = {
+
+        const choreId = editingChoreId;
+        const currentChore = chores.find(c => c.chore_id === choreId);
+
+        const coreChoreUpdate = {
             title: formData.title.trim(),
             description: formData.description.trim() || null,
             due_date: formData.due_date || null,
             recurrence: formData.recurrence || null,
         };
+
+        // Assignment Data
+        const newUser_id_parsed = parseInt(formData.user_id, 10);
+        const newUser_id = (formData.user_id && !isNaN(newUser_id_parsed) && newUser_id_parsed > 0) 
+            ? newUser_id_parsed 
+            : null;
+        const oldUser_id = currentChore?.user_id || null;
+
+        const newStatus = newUser_id ? formData.status : null; 
+        const oldStatus = currentChore?.status;
+
+        let success = true;
+
         try {
-            const res = await fetch(`${API_BASE_URL}/chore/${editingChoreId}`, {
+
+            const resChore = await fetch(`${API_BASE_URL}/chore/${choreId}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(updatedChoreData),
+                body: JSON.stringify(coreChoreUpdate),
             });
-            const data = await res.json();
+            if (!resChore.ok) throw new Error("Failed to update core chore details.");
+            if (newUser_id !== oldUser_id) {
+                if (oldUser_id !== null) {
+                    await handleAssignmentAction('DELETE', '/chore/assignment', { chore_id: choreId, user_id: oldUser_id });
+                }
 
-            if (res.ok && data.success) {
-                setChores(prev => prev.map(c =>
-                    c.chore_id === editingChoreId
-                        ? { ...c, ...updatedChoreData } as Chore 
-                        : c
-                ));
-                setEditingChoreId(null);
-            } else {
-                throw new Error(data.message || "Failed to update chore.");
+                if (newUser_id !== null) {
+                    console.log("Attempting POST /chore/assignment with:", { 
+                        chore_id: choreId, 
+                        user_id: newUser_id, 
+                        status: newStatus 
+                    });
+                    
+                    await handleAssignmentAction('POST', '/chore/assignment', { chore_id: choreId, user_id: newUser_id, status: newStatus });
+                }
+            } 
+            else if (newUser_id !== null && newStatus !== oldStatus) {
+                await handleAssignmentAction('PUT', '/chore/assignment/status', { chore_id: choreId, user_id: newUser_id, status: newStatus });
             }
+
+            setChores(prev => prev.map(c =>
+                c.chore_id === choreId
+                    ? { 
+                        ...c, 
+                        ...coreChoreUpdate, 
+                        user_id: newUser_id, 
+                        status: newStatus 
+                      } as Chore 
+                    : c
+            ));
+            setEditingChoreId(null);
+            
         } catch (err) {
             console.error("Update Chore failed:", err);
-            setError("Error updating chore.");
+            setError("Error updating chore or assignment.");
+            success = false;
         } finally {
             setIsUpdating(false);
+            if (!success) {
+
+            }
         }
     };
     const cancelEditing = () => {
@@ -225,6 +335,7 @@ export function ChorePage({homeId}: ChorePageProps) {
             return titleMatch || descriptionMatch;
         });
     }, [chores, searchTerm]);
+
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-orange-50 via-amber-50 to-orange-100 dark:from-slate-950 dark:via-blue-950 dark:to-slate-900 flex flex-col items-center p-8">
@@ -318,6 +429,7 @@ export function ChorePage({homeId}: ChorePageProps) {
                                             handleFormChange={handleFormChange}
                                             handleUpdateChore={handleUpdateChore}
                                             cancelEditing={cancelEditing}
+                                            users={users}
                                             />
     
                                         ) : (
@@ -348,23 +460,22 @@ export function ChorePage({homeId}: ChorePageProps) {
                                                     <Repeat className="w-4 h-4 text-blue-600 dark:text-blue-400" />
                                                     {chore.recurrence || "One-time"}
                                                 </div>
-
-                                                {/* ASSIGNED TO */}
+                                                {/* ASSIGNED TO*/}
                                                 <div className="col-span-2 text-sm flex items-center gap-2">
                                                     <User className={`w-4 h-4 ${chore.user_id ? 'text-green-600 dark:text-green-400' : 'text-gray-400'}`} />
                                                     <span className={chore.user_id ? 'font-medium' : 'text-muted-foreground italic'}>
-                                                        {chore.user_id ? `User ID: ${chore.user_id}` : 'Unassigned'}
+                                                        {users.find(u => u.user_id === chore.user_id)?.name || 'Unassigned'}
                                                     </span>
                                                 </div>
 
                                                 {/* STATUS */}
                                                 <div className="col-span-2 text-sm flex items-center gap-2">
-                                                    {chore.is_completed === 1 ? (
+                                                    {chore.status === 'Complete' ? (
                                                         <>
                                                             <CheckCircle className="w-4 h-4 text-green-500" />
                                                             <span className="text-green-600 font-semibold">Complete</span>
                                                         </>
-                                                    ) : chore.is_completed === 0 ? (
+                                                    ) : chore.status === 'Pending' ? (
                                                         <>
                                                             <Loader2 className="w-4 h-4 text-amber-500 animate-spin" />
                                                             <span className="text-amber-600">Pending</span>
