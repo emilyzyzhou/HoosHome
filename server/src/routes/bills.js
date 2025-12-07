@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { pool } from "../db/pool.js";
 import jwt from "jsonwebtoken";
+import { splitBill } from "../db/bill_share_sql.js";
 
 const router = Router();
 
@@ -308,7 +309,7 @@ router.put("/:billId", requireAuth, async (req, res) => {
             });
           }
         }
-        
+
       await conn.query("DELETE FROM BillShare WHERE bill_id = ?", [billId]);
 
         const shareValues = shares.map((s) => [
