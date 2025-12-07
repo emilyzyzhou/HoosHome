@@ -8,7 +8,11 @@ import { Home, UserPlus, Zap, AlertCircle, Link, Lock} from "lucide-react";
 import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer"; 
 
-export default function JoinPage() {
+interface JoinPageProps {
+  onHomeJoined: (homeId: number) => void;
+}
+
+export default function JoinPage({ onHomeJoined }: JoinPageProps) {
   const [joinCode, setJoinCode] = useState("");
   const [homeName, setHomeName] = useState("");
   const [homeAddress, setHomeAddress] = useState("");
@@ -34,6 +38,7 @@ export default function JoinPage() {
     try {
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/home/join`, {
         method: 'POST', 
+        credentials: "include",
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ joinCode: joinCode }), 
       });
@@ -43,6 +48,10 @@ export default function JoinPage() {
       if (response.ok && data.success) {
         setMessageType("success");
         setMessage("Successfully found home!"); // this should direct to home later
+        const homeId = data.home_id;
+        if (homeId) {
+          onHomeJoined(homeId);
+        }
       } else {
         setMessageType("error");
         setMessage(data.message || "Invalid join code. Please try again.");
@@ -72,6 +81,7 @@ export default function JoinPage() {
     try {
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/home/create-home`, {
         method: 'POST',
+        credentials: "include",
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
           homeName: homeName, 
@@ -86,6 +96,11 @@ export default function JoinPage() {
         setMessage(`Success! Your new join code is: ${data.newHome.joinCode}`);
         setHomeName("");
         setHomeAddress("");
+
+        const homeId = data.newHome.home_id;
+        if (homeId) {
+          onHomeJoined(homeId);
+        }
       } else {
         setMessageType("error");
         setMessage(data.message || "Failed to create home. Please try again.");
