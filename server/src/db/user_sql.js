@@ -13,6 +13,14 @@ export async function getUserByID(id) {
     return result;
 }
 
+export async function getUserByEmail(email) {
+    const [result] = await pool.query(
+        "SELECT * FROM Users WHERE email = ? LIMIT 1",
+        [email]
+    );
+    return result;
+}
+
 export async function addUser(name, email, hash, phone_number, billing_info, profile_link) {
     const [result] = await pool.query(
         "INSERT INTO Users (name, email, password, phone_number, billing_info, profile_link) VALUES (?, ?, ?, ?, ?, ?)",

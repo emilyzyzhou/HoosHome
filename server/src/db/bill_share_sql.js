@@ -10,8 +10,8 @@ export async function getBillsForUser(user_id) {
 
 export async function getUsersForBill(bill_id) {
     const [result] = await pool.query(
-        "SELECT u.*, bs.status FROM BillShare AS bs INNER JOIN User AS u ON bs.user_id=u.user_id WHERE bs.bill_id = ?",
-        [bill_id, user_id]
+        "SELECT u.*, bs.status FROM BillShare AS bs INNER JOIN Users AS u ON bs.user_id=u.user_id WHERE bs.bill_id = ?",
+        [bill_id]
     );
     return result;
 }

@@ -3,13 +3,15 @@
 import { useState, useEffect } from 'react';
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { User, AlertCircle, Mail, CreditCard, Phone, CheckCircle2, Lock } from "lucide-react"; 
+import { User, AlertCircle, Mail, CreditCard, Phone, CheckCircle2, Lock, Trash } from "lucide-react"; 
 import { Navbar } from "@/components/navbar";
+import { Footer } from "@/components/footer";
 
-type TabKey = "profile" | "password";
+type TabKey = "profile" | "password" | "emergency";
 const tabs: { key: TabKey; label: string }[] = [
   { key: "profile", label: "Profile" },
   { key: "password", label: "Password" },
+  { key: "emergency", label: "Emergency Contact"},
 ];
 
 export default function ProfileSettings() {
@@ -58,11 +60,13 @@ export default function ProfileSettings() {
             </nav>
         </aside>
 
-        <main className="flex-1 px-6 md:px-10 py-6 md:py-10 bg-gradient-to-br from-white via-white to-amber-50 relative z-10">
+        <main className="flex-1 px-6 py-6 bg-white relative z-10">
             {activeTab === "profile" && <AccountDetails />}
             {activeTab === "password" && <PasswordTab />}
+            {activeTab === "emergency" && <EmergencyTab />}
         </main>
         </div>
+        <Footer />
     </div>
   );
 }
@@ -161,14 +165,12 @@ function AccountDetails() {
         body: JSON.stringify({ name, email, phoneNumber, billingInfo }),
       });
 
-      const data = await res.json();
-
       if (!res.ok) {
-        setError(data?.error ?? "Something went wrong. Try again later.");
+        setError("Something went wrong. Try again later.");
       } else {
         setCurrentName(name);
         setSuccess(true);
-        setTimeout(() => setSuccess(false), 3000);
+        setTimeout(() => setSuccess(false), 10000);
       }
     } catch (err) {
       console.error(err);
@@ -176,7 +178,7 @@ function AccountDetails() {
     } 
     setIsLoading(false);
   };
-
+  // god bless emily i'm stealing most of the existing styling from your part
   return (
     <div className="max-w-2xl">
     <div className="mb-8">
@@ -184,7 +186,7 @@ function AccountDetails() {
         Hello, {currentName}
         </h1>
         <p className="text-slate-600 dark:text-slate-400">
-        Manage your account information below
+        Manage your account information below.
         </p>
     </div>
 
@@ -197,8 +199,8 @@ function AccountDetails() {
         )}
         
         {success && (
-        <div className="flex items-center gap-3 p-4 bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400 rounded-lg border border-green-200 dark:border-green-800">
-            <CheckCircle2 className="w-5 h-5 flex-shrink-0" />
+        <div className="p-3 border rounded text-green-700">
+            <CheckCircle2 className="w-5 h-5 inline-block mr-2" />
             <span className="text-sm font-medium">Info successfully updated!</span>
         </div>
         )}
@@ -333,13 +335,11 @@ function PasswordTab() {
         body: JSON.stringify({ currentPassword, newPassword }),
       });
 
-      const data = await res.json();
-
       if (!res.ok) {
-        setError(data?.error ?? "Invalid current password.");
+        setError("Invalid current password.");
       } else {
         setSuccess(true);
-        setTimeout(() => setSuccess(false), 3000);
+        setTimeout(() => setSuccess(false), 10000);
       }
     } catch (err) {
       console.error(err);
@@ -355,7 +355,7 @@ function PasswordTab() {
                     Change Password
                 </h1>
                 <p className="text-slate-600 dark:text-slate-400">
-                    Update your password to keep your account secure
+                    Update your password to keep your account secure.
                 </p>
             </div>    
             <form onSubmit={handleSubmit} className="space-y-6">
@@ -367,8 +367,8 @@ function PasswordTab() {
             )}
             
             {success && (
-            <div className="flex items-center gap-3 p-4 bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400 rounded-lg border border-green-200 dark:border-green-800">
-                <CheckCircle2 className="w-5 h-5 flex-shrink-0" />
+            <div className="p-3 border rounded text-green-700">
+                <CheckCircle2 className="w-5 h-5 inline-block mr-2" />
                 <span className="text-sm font-medium">Info successfully updated!</span>
             </div>
             )}
@@ -439,5 +439,335 @@ function PasswordTab() {
             </Button>
         </form>
         </div>
+    );
+}
+
+function EmergencyTab() {
+    const [success, setSuccess] = useState(false);
+    const [error, setError] = useState("");
+    const [isLoading, setIsLoading] = useState(false);
+    const [isModalOpen, setIsModalOpen] = useState(false);
+
+    const [emergencyContacts, setEmergencyContacts] = useState([]);
+
+    const [name, setName] = useState("");
+    const [email, setEmail] = useState("");
+    const [phoneNumber, setPhoneNumber] = useState("");
+    const [relationship, setRelationship] = useState("");
+
+    // god if i have to write another one of these i'm gonna lose it
+    
+    const loadEmergencyContacts = async () => {
+      try {
+        setIsLoading(true);
+
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_API_BASE}/profile-settings/get-emergency-contact`,
+          {
+            method: "GET",
+            credentials: "include",
+            headers: { "Content-Type": "application/json" },
+          }
+        );
+
+        const data = await res.json();
+        
+        if (res.ok) {
+          setEmergencyContacts(data.emergencyContacts)
+        } else {
+          setError("Error loading emergency contact. You aren't signed in, perhaps?");
+        }
+      } catch (err) {
+        console.error("Request failed, for some reason :/", err);
+      }
+      setIsLoading(false);
+    }
+
+    useEffect(() => {
+      loadEmergencyContacts();
+    }, []);
+
+    const handleAdd = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
+    setSuccess(false);
+    
+    if (!name) {
+      setError("Contact's name cannot be empty.");
+      return;
+    }
+
+    if (!phoneNumber) {
+      setError("Contact's phone number cannot be empty.");
+      return;
+    }
+
+    if (name.length > 255) {
+      setError("Contact's name is too long.");
+      return;
+    }
+
+    if (email.length > 255) {
+      setError("Contact's email is too long.");
+      return;
+    }
+    
+    if (phoneNumber.length > 20) {
+      setError("Contact's phone number is too long.");
+      return;
+    }
+
+    if (relationship.length > 255) {
+      setError("Contact's relationship is too long.");
+      return;
+    }
+
+    try {
+      setError("");
+      setIsLoading(true);
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/profile-settings/add-emergency-contact`, {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, email, phoneNumber, relationship }),
+      });
+
+      if (!res.ok) {
+        setError("Something went wrong adding the contact.");
+      } else {
+        await loadEmergencyContacts();
+        setSuccess(true);
+        setName("");
+        setEmail("");
+        setPhoneNumber("");
+        setRelationship("");
+        setIsModalOpen(false);
+        setTimeout(() => setSuccess(false), 10000);
+      }
+    } catch (err) {
+      console.error(err);
+      setError("Something went wrong. Try again later.");
+    } 
+    setIsLoading(false);
+    };
+
+    const handleDelete = async (contact_id: number) => {
+    setError("");
+    setSuccess(false);
+    // console.log(contact_id);
+    try {
+      setError("");
+      setIsLoading(true);
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/profile-settings/delete-emergency-contact`, {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ contact_id }),
+      });
+
+      if (!res.ok) {
+        setError("Something went wrong delete the contact.");
+      } else {
+        await loadEmergencyContacts();
+        setSuccess(true);
+        setTimeout(() => setSuccess(false), 10000);
+      }
+    } catch (err) {
+      console.error(err);
+      setError("Something went wrong. Try again later.");
+    } 
+    setIsLoading(false);
+    };
+
+    const openModal = () => {
+        setIsModalOpen(true);
+    }
+
+    const closeModal = () => {
+      setIsModalOpen(false);
+      setName("");
+      setEmail("");
+      setPhoneNumber("");
+      setRelationship("");
+      setError("");
+    }
+
+    return (
+        <div className="max-w-2xl">
+            <div className="mb-8">
+                <h1 className="text-3xl font-bold text-blue-900 dark:text-orange-200 mb-2">
+                    Emergency Contacts
+                </h1>
+                <p className="text-slate-600 dark:text-slate-400">
+                    Add important contacts in case of emergencies.
+                </p>
+                <Button
+                  type="button"
+                  onClick={openModal}
+                  className="mt-4 w-full md:w-auto bg-blue-600 text-white rounded px-4 py-2"
+                  disabled={isLoading}
+                  >
+                  {isLoading ? "Loading..." : "Add Contact"}
+                </Button>
+            </div>    
+            
+              {success && (
+              <div className="p-3 border rounded text-green-700">
+                <CheckCircle2 className="w-5 h-5 inline-block mr-2" />
+                <span className="text-sm">Emergency contacts updated!</span>
+              </div>
+              )}
+            {/* i KNOW this variant of checking looks scuffed but it's the only way I could thin kof :( */}
+            {emergencyContacts.length > 0 && (
+              <div className="mt-6 space-y-3">
+                {emergencyContacts.map((c: any, idx: number) => (
+                  <div
+                    key={c.contact_id}
+                    className="flex items-start justify-between gap-4 p-4 border rounded"
+                  >
+                <div className="min-w-0">
+                    <h4 className="text-sm font-semibold truncate">{c.name}</h4>
+                    <p className="text-xs mt-1">{c.relation_to_user || 'Unknown'}</p>
+                    {c.phone_number && (
+                        <p className="text-xs mt-1">{c.phone_number}</p>
+                    )}
+                    {c.email && (
+                        <p className="text-xs mt-1">{c.email}</p>
+                    )}
+                </div>
+                <button
+                    type="button"
+                    onClick={() => handleDelete(c.contact_id)}
+                    className="text-gray-600 hover:text-red-600 flex-shrink-0"
+                    title="Delete contact"
+                >
+                    <Trash className="w-4 h-4" />
+                </button>
+              </div>
+                ))}
+              </div>
+            )}
+
+            {emergencyContacts.length === 0 && (
+                <p className="text-sm text-blue-900 dark:text-orange-200 font-medium">You don't have any emergency contacts yet. Add one!</p>
+            )}
+
+            {isModalOpen && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
+            <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl">
+                
+                <div className="mb-6 flex items-start justify-between">
+                <div>
+                    <h3 className="text-lg font-semibold text-gray-900">
+                    Add Emergency Contact
+                    </h3>
+                    <p className="mt-1 text-sm text-gray-500">
+                    Fill in the details for this contact.
+                    </p>
+                </div>
+                </div>
+                {error && (
+                <div className="flex items-center gap-3 p-4 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 rounded-lg border border-red-200 dark:border-red-800">
+                    <AlertCircle className="w-5 h-5 flex-shrink-0" />
+                    <span className="text-sm font-medium">{error}</span>
+                </div>
+                )}
+                <form onSubmit={handleAdd} className="space-y-6">
+                  <div className="space-y-2">
+                    <label htmlFor="contactName" className="text-sm font-semibold text-blue-900">
+                      Name
+                    </label>
+                    <div className="relative">
+                      <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                      <Input
+                        id="contactName"
+                        type="text"
+                        placeholder="Contact name"
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
+                        className="pl-10 bg-orange-50 border-orange-200 focus:ring-orange-500"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <label htmlFor="contactEmail" className="text-sm font-semibold text-blue-900">
+                      Email
+                    </label>
+                    <div className="relative">
+                      <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                      <Input
+                        id="contactEmail"
+                        type="email"
+                        placeholder="contact@example.com"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        className="pl-10 bg-orange-50 border-orange-200 focus:ring-orange-500"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <label htmlFor="contactPhone" className="text-sm font-semibold text-blue-900">
+                      Phone Number
+                    </label>
+                    <div className="relative">
+                      <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                      <Input
+                        id="contactPhone"
+                        type="tel"
+                        placeholder="Phone number"
+                        value={phoneNumber}
+                        onChange={(e) => setPhoneNumber(e.target.value)}
+                        className="pl-10 bg-orange-50 border-orange-200 focus:ring-orange-500"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <label htmlFor="relationship" className="text-sm font-semibold text-blue-900">
+                      Relationship
+                    </label>
+                    <Input
+                      id="relationship"
+                      type="text"
+                      placeholder="Select or type a relationship"
+                      list="relations"
+                      value={relationship}
+                      onChange={(e) => setRelationship(e.target.value)}
+                      className="bg-orange-50 border-orange-200 focus:ring-orange-500"
+                    />
+                    {/* internet said use a datalist if you want suggestions and it looks p good to me */}
+                    <datalist id="relations">
+                      <option value="Mother" />
+                      <option value="Father" />
+                      <option value="Spouse" />
+                      <option value="Sibling" />
+                      <option value="Grandparent" />
+                      <option value="Legal Guardian" />
+                      <option value="Other" />
+                    </datalist>
+                  </div>
+
+                  <div className="mt-6 flex justify-end gap-2">
+                    <Button
+                      type="button"
+                      onClick={closeModal}
+                      className="border px-4 py-2 rounded"
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      type="submit"
+                      className="bg-blue-600 text-white px-4 py-2 rounded"
+                    >
+                      Save Contact
+                    </Button>
+                  </div>
+                </form>
+            </div>
+        </div>
+      )}
+    </div>
     );
 }

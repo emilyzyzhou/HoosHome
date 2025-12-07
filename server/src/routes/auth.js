@@ -3,6 +3,7 @@ import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import { pool } from "../db/pool.js";
 import { loginLimiter } from "../middleware/rateLimiter.js";
+import { getUserByEmail, addUser } from "../db/user_sql.js";
 
 const router = Router();
 const TOKEN_COOKIE = "hh_token";
@@ -43,25 +44,13 @@ router.post("/register", async (req, res) => {
     }
 
     // Check if email exists
-    const [rows] = await pool.query("SELECT 1 FROM Users WHERE email = ? LIMIT 1", [email]);
+    const rows = await getUserByEmail(email);
     if (rows.length) return res.status(409).json({ error: "Email already registered" });
 
     const hash = await bcrypt.hash(password, 12);
 
     // Insert — include all columns you require; use NULL for optional fields
-    const [result] = await pool.query(
-      `INSERT INTO Users 
-       (name, email, password, phone_number, billing_info, profile_link)
-       VALUES (?, ?, ?, ?, ?, ?)`,
-      [
-        name,
-        email,
-        hash,
-        phone_number ?? null,
-        billing_info ?? null,
-        profile_link ?? null,
-      ]
-    );
+    const result = await addUser(name, email, hash, phone_number, billing_info, profile_link);
 
     setAuthCookie(res, { user_id: result.insertId, email });
     res.json({ ok: true, user_id: result.insertId });
@@ -80,7 +69,7 @@ router.post("/login", async (req, res) => {
       return res.status(400).json({ error: "Missing email or password" });
     }
 
-    const [rows] = await pool.query("SELECT * FROM Users WHERE email = ? LIMIT 1", [email]);
+    const rows = await getUserByEmail(email);
     if (!rows.length) return res.status(401).json({ error: "Invalid credentials" });
 
   const user = rows[0];
