@@ -1,0 +1,241 @@
+"use client";
+
+import { useState, useEffect } from 'react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input"
+import { Button } from "@/components/ui/button"
+import { User, AlertCircle, Mail, CreditCard, Phone, IdCard, CheckSquareIcon } from "lucide-react"; 
+
+
+
+export default function ProfileSettings() {
+    const [currentName, setCurrentName] = useState("");
+    const [name, setName] = useState("");
+    const [email, setEmail] = useState("");
+    const [password, setPassword] = useState("");
+    const [billingInfo, setBillingInfo] = useState("");
+    const [phoneNumber, setPhoneNumber] = useState("");
+
+    const [success, setSuccess] = useState(false);
+    const [error, setError] = useState("");
+    const [isLoading, setIsLoading] = useState(false);
+
+    useEffect(() => {
+    async function loadProfile() {
+        try {
+            setIsLoading(true);
+
+            const res = await fetch(
+                `${process.env.NEXT_PUBLIC_API_BASE}/profile-settings/get-info`,
+                {
+                    method: "POST",
+                    credentials: "include",
+                    headers: { "Content-Type": "application/json" },
+                }
+            );
+
+            const data = await res.json();
+            
+            if (res.ok) {
+                setCurrentName(data.user_info.name);
+                setName(data.user_info.name);
+                setEmail(data.user_info.email);
+                setBillingInfo(data.user_info.bill_info);
+                setPhoneNumber(data.user_info.phone_number);
+            } else {
+                setError("Error loading profile. You aren't signed in, perhaps?");
+            }
+        } catch (err) {
+            console.error("Request failed, for some reason :/", err);
+        }
+        setIsLoading(false);
+    }
+
+    loadProfile();
+    }, []);
+
+    const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
+    setSuccess(false);
+    // holy yandere dev if statements
+    if (!name) {
+        setError("Your name cannot be empty.");
+    }
+
+    if (!email) {
+        setError("Your email cannot be empty.");
+        return;
+    }
+
+    if (!email.includes("@")) {
+        setError("Please enter a valid email address");
+        return;
+    }
+
+    // and honestly I don't think there's any good way of stopping a user from putting some weird phone #, profile link, or billing info or REMOVING those things so I think it is what it is
+    // i'll just enforce the length requirement I think for each of the possible fields for account detail submission
+    // the actual phone number enforcement should happen on the HTML side with type='tel' anyway
+
+    if (name.length > 255) {
+        setError("Your name is too long.");
+        return;
+    }
+
+    if (email.length > 255) {
+        setError("Your email is too long.");
+        return;
+    }
+
+    if (phoneNumber.length > 20) {
+        setError("Your phone number is too long.");
+        return;
+    }
+
+    if (billingInfo.length > 255) {
+        setError("Your billing info is too long.");
+        return;
+    }
+
+    try {
+        setIsLoading(true);
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/profile-settings/update-info`, {
+            method: "POST",
+            credentials: "include",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ name, email, phoneNumber, billingInfo }),
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+            setError(data?.error ?? "Something went wrong. Try again later.");
+        }
+        setCurrentName(name);
+        setSuccess(true);
+    } catch (err) {
+        console.error(err);
+        setError("Something went wrong. Try again later.");
+    } 
+    setIsLoading(false);
+    };
+
+    return (
+        <div className="min-h-screen bg-gradient-to-br from-orange-50 via-amber-50 to-orange-100 dark:from-slate-950 dark:via-blue-950 dark:to-slate-900 flex items-center justify-center p-4">
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+            <div className="absolute top-10 right-10 w-32 h-32 bg-orange-200 dark:bg-blue-800/30 rounded-full opacity-30 blur-3xl"></div>
+            <div className="absolute bottom-10 left-10 w-40 h-40 bg-amber-200 dark:bg-orange-800/20 rounded-full opacity-20 blur-3xl"></div>
+        </div>
+        <Card className="w-full max-w-lg shadow-2xl border-orange-100 dark:border-blue-800 relative z-10">
+            <CardHeader className="space-y-2 text-center bg-gradient-to-b from-orange-50 to-transparent dark:from-blue-900/20 dark:to-transparent pb-6">
+                <div className="flex justify-center mb-4">
+                    <div className="bg-gradient-to-br from-orange-500 to-amber-600 p-3 rounded-lg shadow-lg">
+                        <IdCard className="w-8 h-8 text-white" />
+                    </div>
+                </div>
+                <CardTitle className="text-3xl font-bold bg-gradient-to-r from-blue-500 to-orange-600 dark:from-orange-300 dark:to-amber-300 bg-clip-text text-transparent">
+                    Hello, {currentName}.
+                </CardTitle>
+                <CardDescription className="text-base">
+                    Manage your account information here.
+                </CardDescription>
+            </CardHeader>
+            <CardContent>
+                <form onSubmit={handleSubmit} className="space-y-4">
+                    {error && (
+                    <div className="flex items-center gap-2 p-3 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 rounded-lg text-sm">
+                        <AlertCircle className="w-4 h-4 flex-shrink-0" />
+                        <span>{error}</span>
+                    </div>
+                    )}
+                    {success && (
+                    <div className="flex items-center gap-2 p-3 bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400 rounded-lg text-sm">
+                        <CheckSquareIcon className="w-4 h-4 flex-shrink-0" />
+                        <span>Info successfully changed!</span>
+                    </div>
+                    )}
+                    <div className="space-y-2">
+                    <label htmlFor="name" className="text-sm font-semibold text-blue-900 dark:text-orange-200">
+                        Name
+                    </label>
+                        <div className="relative">
+                            <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                            <Input
+                            id="name"
+                            type="text"
+                            placeholder="Enter your name"
+                            value={name}
+                            onChange={(e) => setName(e.target.value)}
+                            className="pl-10 bg-orange-50 dark:bg-blue-900/30 border-orange-200 dark:border-blue-800 focus:ring-orange-500 dark:focus:ring-orange-400"
+                            disabled={isLoading}
+                            maxLength={255}
+                            />
+                        </div>
+                    </div>
+                    <div className="space-y-2">
+                    <label htmlFor="email" className="text-sm font-semibold text-blue-900 dark:text-orange-200">
+                        Email Address
+                    </label>
+                        <div className="relative">
+                            <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                            <Input
+                            id="email"
+                            type="email"
+                            placeholder="you@example.com"
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                            className="pl-10 bg-orange-50 dark:bg-blue-900/30 border-orange-200 dark:border-blue-800 focus:ring-orange-500 dark:focus:ring-orange-400"
+                            disabled={isLoading}
+                            maxLength={255}
+                            />
+                        </div>
+                    </div>
+                    <div className="space-y-2">
+                    <label htmlFor="phoneNumber" className="text-sm font-semibold text-blue-900 dark:text-orange-200">
+                        Phone Number
+                    </label>
+                        <div className="relative">
+                        <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                        <Input
+                            id="phoneNumber"
+                            type="tel"
+                            placeholder="Enter your phone number"
+                            value={phoneNumber}
+                            onChange={(e) => setPhoneNumber(e.target.value)}
+                            className="pl-10 bg-orange-50 dark:bg-blue-900/30 border-orange-200 dark:border-blue-800 focus:ring-orange-500 dark:focus:ring-orange-400"
+                            disabled={isLoading}
+                            maxLength={20}
+                            />
+                        </div>
+                    </div>
+                    <div className="space-y-2">
+                    <label htmlFor="billingInfo" className="text-sm font-semibold text-blue-900 dark:text-orange-200">
+                        Billing Information
+                    </label>
+                        <div className="relative">
+                        <CreditCard className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                        <Input
+                            id="billingInfo"
+                            type="text"
+                            placeholder="Enter your billing handle (e.g. Venmo: @hooshome)"
+                            value={billingInfo}
+                            onChange={(e) => setBillingInfo(e.target.value)}
+                            className="pl-10 bg-orange-50 dark:bg-blue-900/30 border-orange-200 dark:border-blue-800 focus:ring-orange-500 dark:focus:ring-orange-400"
+                            disabled={isLoading}
+                            maxLength={255}
+                            />
+                        </div>
+                    </div>
+                    <Button
+                        type="submit"
+                        className="w-full bg-gradient-to-r from-blue-900 to-blue-800 hover:from-blue-800 hover:to-blue-700 text-white font-semibold shadow-lg"
+                        disabled={isLoading}
+                        >
+                        {isLoading ? "Updating..." : "Update Information"}
+                    </Button>
+                </form>
+            </CardContent>
+        </Card>
+        </div>
+    );
+}

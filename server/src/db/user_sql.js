@@ -21,10 +21,10 @@ export async function addUser(name, email, hash, phone_number, billing_info, pro
     return result;
 }
 
-export async function updateUser(id, name, email, phone_number, billing_info, profile_link) {
+export async function updateUser(id, name, email, hash, phone_number, billing_info, profile_link) {
     const [result] = await pool.query(
-        "UPDATE Users SET name = ?, email = ?, phone_number = ?, billing_info = ?, profile_link = ? WHERE user_id = ?",
-        [name, email, phone_number ?? null, billing_info ?? null, profile_link ?? null, id]
+        "UPDATE Users SET name = ?, email = ?, password = ?, phone_number = ?, billing_info = ?, profile_link = ? WHERE user_id = ?",
+        [name, email, hash, phone_number ?? null, billing_info ?? null, profile_link ?? null, id]
     );
     return result;
 }
