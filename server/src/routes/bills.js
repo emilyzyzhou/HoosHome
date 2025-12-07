@@ -173,6 +173,16 @@ router.post("/", requireAuth, async (req, res) => {
       return res.status(400).json({ error: "User not part of any home" });
     }
 
+    // Validate share amounts
+    for (const share of shares) {
+      if (!share.amount_due || share.amount_due <= 0) {
+        conn.release();
+        return res.status(400).json({ 
+          error: "All roommate shares must be greater than $0.00. Please adjust the split amounts." 
+        });
+      }
+    }
+
     const homeId = userHome[0].home_id;
 
     await conn.beginTransaction();
@@ -271,6 +281,17 @@ router.put("/:billId", requireAuth, async (req, res) => {
 
     // if shares provided, replace them entirely
     if (Array.isArray(shares) && shares.length > 0) {
+      // Validate share amounts
+      for (const share of shares) {
+        if (!share.amount_due || share.amount_due <= 0) {
+          await conn.rollback();
+          conn.release();
+          return res.status(400).json({ 
+            error: "All roommate shares must be greater than $0.00. Please adjust the split amounts." 
+          });
+        }
+      }
+
       await conn.query("DELETE FROM BillShare WHERE bill_id = ?", [billId]);
 
       const shareValues = shares.map((s) => [
