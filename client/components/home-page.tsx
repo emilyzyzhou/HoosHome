@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 import Dashboard from "@/components/ui/dashboard";
+import { Navbar } from "@/components/navbar";
+import { Footer } from "@/components/footer";
 
 export default function HomePage() {
   const [data, setData] = useState(null);
@@ -12,7 +14,6 @@ export default function HomePage() {
 
     fetch(`${API_BASE}/home/dashboard`, {
       method: "GET",
-      // cache: "no-store",
       credentials: "include",
     })
       .then((res) => {
@@ -30,26 +31,45 @@ export default function HomePage() {
       });
   }, []);
 
-  if (error) {
-    return (
-      <div className="p-6 text-red-600">
-        Failed to load dashboard data.
-      </div>
-    );
-  }
-
-  if (!data) {
-    return (
-      <div className="p-6 text-gray-500">
-        Loading dashboard…
-      </div>
-    );
-  }
-
   return (
-    <div className="container mx-auto p-6">
-      <h1 className="text-2xl font-bold mb-4">My Home</h1>
-      <Dashboard data={data} />
+    <div className="min-h-screen flex flex-col 
+      bg-gradient-to-br from-orange-50 via-amber-50 to-orange-100
+      dark:from-slate-950 dark:via-blue-950 dark:to-slate-900"
+    >
+      {}
+      <Navbar />
+
+      {}
+      <main className="flex-1 container mx-auto px-4 py-8">
+        {error && (
+          <div className="p-6 text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 rounded-lg">
+            Failed to load dashboard data.
+          </div>
+        )}
+
+        {!data && !error && (
+          <div className="p-6 text-gray-500 dark:text-gray-300">
+            Loading dashboard…
+          </div>
+        )}
+
+        {data && (
+          <>
+            <h1 className="text-4xl font-bold mb-6 leading-normal
+              bg-gradient-to-r from-blue-900 to-orange-600 
+              dark:from-orange-300 dark:to-amber-300 
+              bg-clip-text text-transparent"
+            >
+              My Home
+            </h1>
+
+            <Dashboard data={data} />
+          </>
+        )}
+      </main>
+
+      {}
+      <Footer />
     </div>
   );
 }
