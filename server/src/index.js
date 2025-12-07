@@ -4,6 +4,7 @@ import cors from "cors";
 import cookieParser from "cookie-parser";
 import authRoutes from "./routes/auth.js";
 import homeRoutes from "./routes/home.js";
+import choreRoutes from "./routes/chores.js";
 import billsRoutes from "./routes/bills.js";
 import profileSettingsRoutes from "./routes/profile-settings.js"
 import { pool } from "./db/pool.js";
@@ -39,6 +40,7 @@ app.use(
 
 app.use("/auth", authRoutes);
 app.use("/home", homeRoutes);
+app.use("/chore", choreRoutes);
 app.use("/bills", billsRoutes);
 
 app.get("/db/health", async (req, res) => {

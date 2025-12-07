@@ -147,4 +147,25 @@ router.get("/roommates", async (req, res) => {
   }
 });
 
+// GET /home/:homeId/users
+router.get("/:homeId/users", async (req, res) => {
+  try {
+    const { homeId } = req.params;
+
+    if (!homeId) {
+      return res.status(400).json({ success: false, message: "Home ID is required." });
+    }
+
+    const [rows] = await pool.query(
+      'SELECT user_id, name FROM Users natural join HomeMembership WHERE home_id = ?',
+      [homeId]
+    );
+
+    res.json({ success: true, users: rows });
+  } catch (error) {
+    console.error("GET Home Users Error:", error);
+    return res.status(500).json({ success: false, message: "An internal server error occurred while fetching users." });
+  }
+});
+
 export default router;
