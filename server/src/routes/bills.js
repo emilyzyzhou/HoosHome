@@ -270,19 +270,6 @@ router.put("/:billId", requireAuth, async (req, res) => {
       return res.status(403).json({ error: "Not authorized" });
     }
 
-    // Check if any shares have been paid
-    const [paidShares] = await conn.query(
-      "SELECT COUNT(*) as paid_count FROM BillShare WHERE bill_id = ? AND status = 'paid'",
-      [billId]
-    );
-
-    if (paidShares[0].paid_count > 0) {
-      conn.release();
-      return res.status(400).json({ 
-        error: "Cannot edit this bill because one or more roommates have already paid. Please create a new bill instead." 
-      });
-    }
-
     await conn.beginTransaction();
 
     await conn.query(

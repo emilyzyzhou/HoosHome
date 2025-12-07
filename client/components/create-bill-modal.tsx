@@ -48,6 +48,7 @@ export function CreateBillModal({
   const [shareStatuses, setShareStatuses] = useState<Map<number, string>>(new Map())
   const [error, setError] = useState("")
   const [isLoading, setIsLoading] = useState(false)
+  const [hasAnyPaidShares, setHasAnyPaidShares] = useState(false)
 
   useEffect(() => {
     fetchRoommates()
@@ -76,6 +77,10 @@ export function CreateBillModal({
             custom.set(share.user_id, String(share.amount_due))
           }
         })
+        
+        // Check if any shares are paid
+        const hasPaid = data.shares.some((share: any) => share.status === "paid")
+        setHasAnyPaidShares(hasPaid)
         
         setSelectedRoommates(selected)
         setCustomShares(custom)
@@ -237,6 +242,16 @@ export function CreateBillModal({
 
         <CardContent className="p-6">
           <form onSubmit={handleSubmit} className="space-y-4">
+            {hasAnyPaidShares && isEditMode && (
+              <div className="flex items-center gap-2 p-3 bg-yellow-50 dark:bg-yellow-900/20 text-yellow-800 dark:text-yellow-400 rounded-lg text-sm">
+                <AlertCircle className="w-4 h-4 flex-shrink-0" />
+                <span>
+                  One or more roommates have already paid. You can only edit the description, type, and due date. 
+                  To change amounts or roommates, please delete this bill and create a new one.
+                </span>
+              </div>
+            )}
+            
             {error && (
               <div className="flex items-center gap-2 p-3 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 rounded-lg text-sm">
                 <AlertCircle className="w-4 h-4 flex-shrink-0" />
@@ -283,6 +298,7 @@ export function CreateBillModal({
                   placeholder="0.00"
                   className="bg-orange-50 dark:bg-blue-900/30 border-orange-200 dark:border-blue-800"
                   required
+                  disabled={hasAnyPaidShares}
                 />
               </div>
             </div>
@@ -308,6 +324,7 @@ export function CreateBillModal({
                 value={splitRule}
                 onChange={(e) => setSplitRule(e.target.value)}
                 className="w-full px-4 py-2 rounded-md border border-orange-200 dark:border-blue-800 bg-orange-50 dark:bg-blue-900/30"
+                disabled={hasAnyPaidShares}
               >
                 <option value="equal">Split Equally</option>
                 <option value="custom">Custom Split</option>
@@ -328,6 +345,7 @@ export function CreateBillModal({
                       checked={selectedRoommates.has(roommate.user_id)}
                       onChange={() => toggleRoommate(roommate.user_id)}
                       className="w-4 h-4"
+                      disabled={hasAnyPaidShares}
                     />
                     <label htmlFor={`roommate-${roommate.user_id}`} className="flex-1">
                       {roommate.name}
@@ -341,6 +359,7 @@ export function CreateBillModal({
                         onChange={(e) => updateCustomShare(roommate.user_id, e.target.value)}
                         placeholder="Amount"
                         className="w-24 h-8 text-sm"
+                        disabled={hasAnyPaidShares}
                       />
                     )}
                   </div>
