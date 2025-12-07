@@ -65,6 +65,12 @@ export function Navbar() {
                 >
                   My Home
                 </Link>
+                <Link
+                  href="/profile-settings"
+                  className="inline-flex items-center justify-center rounded-md text-sm font-semibold transition-colors bg-gradient-to-r from-blue-900 to-blue-800 hover:from-blue-800 hover:to-blue-700 text-white shadow-lg h-9 px-4"
+                >
+                  My Profile
+                </Link>
                 <button
                   onClick={handleLogout}
                   className="text-sm font-medium text-blue-900 dark:text-orange-200 hover:text-orange-600 dark:hover:text-orange-400 transition-colors flex items-center gap-1"
