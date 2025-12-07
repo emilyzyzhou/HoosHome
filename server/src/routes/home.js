@@ -38,12 +38,14 @@ router.post("/join", async (req, res) => {
       [joinCode]
     );
 
-    if (rows.length === 0) {
-      await conn.rollback();
-      conn.release();
-      return res
-        .status(404)
-        .json({ success: false, message: "Invalid join code." });
+    const homes = rows; 
+
+    if (homes.length > 0) {
+      const home = homes[0];
+      console.log("Found home:", home);
+      return res.json({ success: true, home_id: home.home_id });
+    } else {
+      return res.status(404).json({ success: false, message: "Invalid join code." });
     }
 
     const home = rows[0];
@@ -202,6 +204,27 @@ router.get("/roommates", async (req, res) => {
     return res
       .status(500)
       .json({ error: "An internal server error occurred." });
+  }
+});
+
+// GET /home/:homeId/users
+router.get("/:homeId/users", async (req, res) => {
+  try {
+    const { homeId } = req.params;
+
+    if (!homeId) {
+      return res.status(400).json({ success: false, message: "Home ID is required." });
+    }
+
+    const [rows] = await pool.query(
+      'SELECT user_id, name FROM Users natural join HomeMembership WHERE home_id = ?',
+      [homeId]
+    );
+
+    res.json({ success: true, users: rows });
+  } catch (error) {
+    console.error("GET Home Users Error:", error);
+    return res.status(500).json({ success: false, message: "An internal server error occurred while fetching users." });
   }
 });
 
