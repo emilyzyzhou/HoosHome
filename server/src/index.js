@@ -5,6 +5,8 @@ import cookieParser from "cookie-parser";
 import authRoutes from "./routes/auth.js";
 import homeRoutes from "./routes/home.js";
 import choreRoutes from "./routes/chores.js";
+import billsRoutes from "./routes/bills.js";
+import profileSettingsRoutes from "./routes/profile-settings.js"
 import { pool } from "./db/pool.js";
 import { loginLimiter, generalLimiter } from "./middleware/rateLimiter.js";
 
@@ -26,6 +28,7 @@ app.use(
 app.use(generalLimiter);
 app.use("/auth/login", loginLimiter);
 app.use("/auth", authRoutes);
+app.use("/profile-settings", profileSettingsRoutes);
 
 // Allow your Next app to call this API in dev
 app.use(
@@ -38,7 +41,7 @@ app.use(
 app.use("/auth", authRoutes);
 app.use("/home", homeRoutes);
 app.use("/chore", choreRoutes);
-
+app.use("/bills", billsRoutes);
 
 app.get("/db/health", async (req, res) => {
   try {

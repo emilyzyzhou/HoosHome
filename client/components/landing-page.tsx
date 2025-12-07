@@ -1,7 +1,6 @@
 import Link from "next/link"
 import { Navbar } from "@/components/navbar"
 import { Footer } from "@/components/footer"
-import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Home, Users, DollarSign, Calendar, CheckSquare } from "lucide-react"
 
@@ -27,19 +26,18 @@ export default function LandingPage() {
               The ultimate roommate management platform. Organize bills, chores, and events all in one place.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button
-                size="lg"
-                className="bg-gradient-to-r from-blue-900 to-blue-800 hover:from-blue-800 hover:to-blue-700 text-white font-semibold shadow-lg text-lg px-8"
+              <Link
+                href="/login"
+                className="inline-flex items-center justify-center rounded-md font-semibold transition-colors bg-gradient-to-r from-blue-900 to-blue-800 hover:from-blue-800 hover:to-blue-700 text-white shadow-lg text-lg px-8 h-12"
               >
-                <Link href="/join">Get Started</Link>
-              </Button>
-              <Button
-                size="lg"
-                variant="outline"
-                className="border-blue-900 dark:border-orange-400 text-blue-900 dark:text-orange-200 hover:bg-orange-50 dark:hover:bg-blue-900/20 font-semibold text-lg px-8"
+                Get Started
+              </Link>
+              <Link
+                href="/login"
+                className="inline-flex items-center justify-center rounded-md font-semibold transition-colors border border-blue-900 dark:border-orange-400 text-blue-900 dark:text-orange-200 hover:bg-orange-50 dark:hover:bg-blue-900/20 text-lg px-8 h-12"
               >
-                <Link href="/login">Login</Link>
-              </Button>
+                Login
+              </Link>
             </div>
           </div>
         </section>
@@ -147,12 +145,12 @@ export default function LandingPage() {
             <p className="text-lg text-blue-900 dark:text-orange-200 mb-8">
               Join thousands of roommates already using HoosHome to make shared living easier.
             </p>
-            <Button
-              size="lg"
-              className="bg-gradient-to-r from-blue-900 to-blue-800 hover:from-blue-800 hover:to-blue-700 text-white font-semibold shadow-lg text-lg px-8"
+            <Link
+              href="/join"
+              className="inline-flex items-center justify-center rounded-md font-semibold transition-colors bg-gradient-to-r from-blue-900 to-blue-800 hover:from-blue-800 hover:to-blue-700 text-white shadow-lg text-lg px-8 h-12"
             >
-              <Link href="/join">Create or Join a Home</Link>
-            </Button>
+              Get Started
+            </Link>
           </div>
         </section>
       </main>
