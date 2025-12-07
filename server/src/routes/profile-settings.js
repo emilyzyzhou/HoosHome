@@ -1,6 +1,7 @@
 import { Router } from "express";
 import jwt from "jsonwebtoken";
-import { getUserByID, updateUser } from "../db/user_sql.js"
+import { getUserByID, updateUser } from "../db/user_sql.js";
+import { getEmergencyContactsByUserID, addEmergencyContact, deleteEmergencyContact } from "../db/emergency_contact_sql.js";
 import bcrypt from "bcrypt";
 
 const router = Router();
@@ -64,6 +65,61 @@ router.post("/update-password", async (req, res) => {
     return res.json({ success: true, message: "User password updated successfully." });
   } catch (error) {
     console.error("Updating password failed, somehow: ", error);
+    return res.status(500).json({ success: false, message: "Server error occurred." });
+  }
+});
+
+router.get("/get-emergency-contact", async (req, res) => {
+  const token = req.cookies?.[TOKEN_COOKIE];
+  const payload = jwt.verify(token, process.env.JWT_SECRET);
+  const userID = payload.user_id;
+
+  try {
+    const emergencyContacts = await getEmergencyContactsByUserID(userID);
+    return res.json({ 
+      success: true,
+      emergencyContacts: emergencyContacts
+    });
+  } catch (error) {
+    console.error("Getting contacts failed, somehow: ", error);
+    return res.status(500).json({ success: false, message: "Server error occurred." });
+  }
+});
+
+router.post("/add-emergency-contact", async (req, res) => {
+  const token = req.cookies?.[TOKEN_COOKIE];
+  const payload = jwt.verify(token, process.env.JWT_SECRET);
+  const userID = payload.user_id;
+
+  const { name, email, phoneNumber, relationship } = req.body || {};
+  try {
+    await addEmergencyContact(userID, name, email, phoneNumber, relationship);
+    return res.json({ 
+      success: true, message: "Added emergency contact!"
+    });
+  } catch (error) {
+    console.error("Adding contact failed, somehow: ", error);
+    return res.status(500).json({ success: false, message: "Server error occurred." });
+  }
+});
+
+router.post("/delete-emergency-contact", async (req, res) => {
+  const token = req.cookies?.[TOKEN_COOKIE];
+  const payload = jwt.verify(token, process.env.JWT_SECRET);
+  const userID = payload.user_id;
+
+  const { contact_id } = req.body || {};
+
+  // console.log(userID);
+  // console.log(contact_id);
+
+  try {
+    await deleteEmergencyContact(userID, contact_id);
+    return res.json({
+      success: true, message: "Successfully deleted contact!"
+    });
+  } catch (error) {
+    console.error("Deleting contact failed, somehow: ", error);
     return res.status(500).json({ success: false, message: "Server error occurred." });
   }
 });
