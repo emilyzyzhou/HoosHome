@@ -2,8 +2,11 @@ import "dotenv/config";
 import express from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
+
 import authRoutes from "./routes/auth.js";
 import homeRoutes from "./routes/home.js";
+import profileSettingsRoutes from "./routes/profile-settings.js";
+
 import choreRoutes from "./routes/chores.js";
 import billsRoutes from "./routes/bills.js";
 import profileSettingsRoutes from "./routes/profile-settings.js"
@@ -12,36 +15,29 @@ import { loginLimiter, generalLimiter } from "./middleware/rateLimiter.js";
 
 const app = express();
 
-app.use(express.json());
-app.use(cookieParser());
-
 app.set("trust proxy", 1);
 
 app.use(express.json());
 app.use(cookieParser());
+
+
 app.use(
   cors({
-    origin: process.env.CORS_ORIGIN ?? "http://localhost:3000",
+    origin: process.env.CORS_ORIGIN || "http://localhost:3000",
     credentials: true,
   })
 );
+
+
 app.use(generalLimiter);
 app.use("/auth/login", loginLimiter);
+
 app.use("/auth", authRoutes);
 app.use("/profile-settings", profileSettingsRoutes);
-
-// Allow your Next app to call this API in dev
-app.use(
-  cors({
-    origin: process.env.CORS_ORIGIN ?? "http://localhost:3000",
-    credentials: true, // allow cookies
-  })
-);
-
-app.use("/auth", authRoutes);
 app.use("/home", homeRoutes);
 app.use("/chore", choreRoutes);
 app.use("/bills", billsRoutes);
+
 
 app.get("/db/health", async (req, res) => {
   try {
@@ -53,6 +49,7 @@ app.get("/db/health", async (req, res) => {
   }
 });
 
-
 const port = process.env.PORT || 4000;
-app.listen(port, () => console.log(`Server listening on http://localhost:${port}`));
+app.listen(port, () =>
+  console.log(`Server listening on http://localhost:${port}`)
+);

@@ -13,6 +13,7 @@ function getUserIdFromRequest(req) {
 }
 
 const router = Router();
+const TOKEN_COOKIE = "hh_token";
 
 // POST /home/join
 router.post("/join", async (req, res) => {
