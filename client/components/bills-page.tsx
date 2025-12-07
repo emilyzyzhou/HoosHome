@@ -6,7 +6,7 @@ import { Footer } from "@/components/footer"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { DollarSign, Search, Filter, Plus, ChevronDown, ChevronRight, Pencil, Trash2, AlertCircle, RefreshCw } from "lucide-react"
+import { DollarSign, Search, Filter, Plus, ChevronDown, ChevronRight, Pencil, Trash2, AlertCircle, RefreshCw, Calendar, CheckCircle, ArrowUpDown, User, Edit } from "lucide-react"
 import { CreateBillModal } from "@/components/create-bill-modal"
 
 interface BillShare {
@@ -40,6 +40,8 @@ export function BillsPage() {
   const [outstandingSearch, setOutstandingSearch] = useState("")
   const [createdSearch, setCreatedSearch] = useState("")
   const [outstandingFilter, setOutstandingFilter] = useState<"outstanding" | "all">("outstanding")
+  const [outstandingDateSort, setOutstandingDateSort] = useState<"asc" | "desc">("asc")
+  const [createdDateSort, setCreatedDateSort] = useState<"asc" | "desc">("asc")
   const [expandedBills, setExpandedBills] = useState<Set<number>>(new Set())
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
   const [editingBill, setEditingBill] = useState<Bill | null>(null)
@@ -158,8 +160,16 @@ export function BillsPage() {
     )
   }
 
-  const filteredOutstanding = filterBills(outstandingBills, outstandingSearch)
-  const filteredCreated = filterBills(createdBills, createdSearch)
+  const sortBillsByDate = (bills: Bill[], sortOrder: "asc" | "desc") => {
+    return [...bills].sort((a, b) => {
+      const dateA = new Date(a.due_date).getTime()
+      const dateB = new Date(b.due_date).getTime()
+      return sortOrder === "asc" ? dateA - dateB : dateB - dateA
+    })
+  }
+
+  const filteredOutstanding = sortBillsByDate(filterBills(outstandingBills, outstandingSearch), outstandingDateSort)
+  const filteredCreated = sortBillsByDate(filterBills(createdBills, createdSearch), createdDateSort)
 
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-br from-orange-50 via-amber-50 to-orange-100 dark:from-slate-950 dark:via-blue-950 dark:to-slate-900">
@@ -223,6 +233,14 @@ export function BillsPage() {
                   <option value="outstanding">Outstanding Only</option>
                   <option value="all">All Bills</option>
                 </select>
+                <Button
+                  variant="outline"
+                  onClick={() => setOutstandingDateSort(prev => prev === 'asc' ? 'desc' : 'asc')}
+                  className="border-orange-200 dark:border-blue-800 bg-white dark:bg-slate-900 whitespace-nowrap"
+                >
+                  <ArrowUpDown className="w-4 h-4 mr-2" />
+                  Due: {outstandingDateSort === 'asc' ? 'Oldest' : 'Newest'}
+                </Button>
               </div>
             </div>
           </CardHeader>
@@ -233,7 +251,9 @@ export function BillsPage() {
                   <tr>
                     <th className="text-left p-4 text-sm font-semibold text-blue-900 dark:text-orange-200">Description</th>
                     <th className="text-left p-4 text-sm font-semibold text-blue-900 dark:text-orange-200">Type</th>
-                    <th className="text-left p-4 text-sm font-semibold text-blue-900 dark:text-orange-200">Due Date</th>
+                    <th className="text-left p-4 text-sm font-semibold text-blue-900 dark:text-orange-200 flex items-center gap-1">
+                      Due Date {outstandingDateSort === 'asc' ? '↑' : '↓'}
+                    </th>
                     <th className="text-right p-4 text-sm font-semibold text-blue-900 dark:text-orange-200">Total Amount</th>
                     <th className="text-right p-4 text-sm font-semibold text-blue-900 dark:text-orange-200">You Owe</th>
                     <th className="text-center p-4 text-sm font-semibold text-blue-900 dark:text-orange-200">Status</th>
@@ -257,18 +277,22 @@ export function BillsPage() {
                       <tr key={bill.bill_id} className="border-b border-orange-100 dark:border-blue-800 hover:bg-orange-50 dark:hover:bg-blue-900/10">
                         <td className="p-4">{bill.description}</td>
                         <td className="p-4">{bill.bill_type || "N/A"}</td>
-                        <td className="p-4">{new Date(bill.due_date).toLocaleDateString()}</td>
+                        <td className="p-4 flex items-center gap-2">
+                          <Calendar className="w-4 h-4 text-muted-foreground" />
+                          {new Date(bill.due_date).toLocaleDateString()}
+                        </td>
                         <td className="text-right p-4">${Number(bill.total_amount).toFixed(2)}</td>
                         <td className="text-right p-4 font-semibold">${Number(bill.amount_owed)?.toFixed(2) || "0.00"}</td>
                         <td className="text-center p-4">
                           <span
-                            className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                            className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold ${
                               bill.payment_status === "paid"
                                 ? "bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400"
                                 : "bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400"
                             }`}
                           >
-                            {bill.payment_status || " "}
+                            {bill.payment_status === "paid" && <CheckCircle className="w-3 h-3" />}
+                            {bill.payment_status || "unpaid"}
                           </span>
                         </td>
                       </tr>
@@ -297,6 +321,14 @@ export function BillsPage() {
                   className="pl-10 w-64 bg-white dark:bg-slate-900"
                 />
               </div>
+              <Button
+                variant="outline"
+                onClick={() => setCreatedDateSort(prev => prev === 'asc' ? 'desc' : 'asc')}
+                className="border-orange-200 dark:border-blue-800 bg-white dark:bg-slate-900 whitespace-nowrap"
+              >
+                <ArrowUpDown className="w-4 h-4 mr-2" />
+                Due: {createdDateSort === 'asc' ? 'Oldest' : 'Newest'}
+              </Button>
             </div>
           </CardHeader>
           <CardContent className="p-0">
@@ -307,7 +339,9 @@ export function BillsPage() {
                     <th className="w-12 p-4"></th>
                     <th className="text-left p-4 text-sm font-semibold text-blue-900 dark:text-orange-200">Description</th>
                     <th className="text-left p-4 text-sm font-semibold text-blue-900 dark:text-orange-200">Type</th>
-                    <th className="text-left p-4 text-sm font-semibold text-blue-900 dark:text-orange-200">Due Date</th>
+                    <th className="text-left p-4 text-sm font-semibold text-blue-900 dark:text-orange-200 flex items-center gap-1">
+                      Due Date {createdDateSort === 'asc' ? '↑' : '↓'}
+                    </th>
                     <th className="text-right p-4 text-sm font-semibold text-blue-900 dark:text-orange-200">Total Amount</th>
                     <th className="text-center p-4 text-sm font-semibold text-blue-900 dark:text-orange-200">Actions</th>
                   </tr>
@@ -343,7 +377,10 @@ export function BillsPage() {
                           </td>
                           <td className="p-4">{bill.description}</td>
                           <td className="p-4">{bill.bill_type || "N/A"}</td>
-                          <td className="p-4">{new Date(bill.due_date).toLocaleDateString()}</td>
+                          <td className="p-4 flex items-center gap-2">
+                            <Calendar className="w-4 h-4 text-muted-foreground" />
+                            {new Date(bill.due_date).toLocaleDateString()}
+                          </td>
                           <td className="text-right p-4 font-semibold">${Number(bill.total_amount).toFixed(2)}</td>
                           <td className="text-center p-4">
                             <div className="flex justify-center gap-2">
@@ -352,7 +389,7 @@ export function BillsPage() {
                                 className="p-2 hover:bg-orange-200 dark:hover:bg-blue-800 rounded text-blue-900 dark:text-orange-200"
                                 title="Edit bill"
                               >
-                                <Pencil className="w-4 h-4" />
+                                <Edit className="w-4 h-4" />
                               </button>
                               <button
                                 onClick={() => handleDeleteBill(bill.bill_id)}
@@ -382,16 +419,20 @@ export function BillsPage() {
                                   <tbody>
                                     {bill.shares.map((share) => (
                                       <tr key={share.user_id} className="text-sm">
-                                        <td className="py-2">{share.user_name}</td>
+                                        <td className="py-2 flex items-center gap-2">
+                                          <User className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                                          {share.user_name}
+                                        </td>
                                         <td className="text-right py-2">${Number(share.amount_due).toFixed(2)}</td>
                                         <td className="text-center py-2">
                                           <span
-                                            className={`px-2 py-1 rounded-full text-xs font-semibold ${
+                                            className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-semibold ${
                                               share.status === "paid"
                                                 ? "bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400"
                                                 : "bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400"
                                             }`}
                                           >
+                                            {share.status === "paid" && <CheckCircle className="w-3 h-3" />}
                                             {share.status}
                                           </span>
                                         </td>
