@@ -203,7 +203,7 @@ export function ChorePage({homeId}: ChorePageProps) {
             <main className="flex-1 container mx-auto px-4 py-8">
                 <div className="mb-6 flex flex-col sm:flex-row items-center justify-between gap-4">
                     <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-900 to-orange-600 dark:from-orange-300 dark:to-amber-300 bg-clip-text text-transparent">
-                        Chores & Tasks
+                        Chores
                     </h1>
                     <div className="flex gap-2 w-full sm:w-auto">
                         <Button
