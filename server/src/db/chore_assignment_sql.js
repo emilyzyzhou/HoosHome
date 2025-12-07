@@ -39,3 +39,19 @@ export async function removeChoreAssignment(chore_id, user_id) {
     );
     return result;
 }
+
+export async function getChoresForHome(home_id) {
+    const [result] = await pool.query(
+        `SELECT 
+            c.chore_id,
+            c.description,
+            ca.user_id,
+            ca.status
+        FROM Chore AS c
+        LEFT JOIN ChoreAssignment AS ca 
+            ON ca.chore_id = c.chore_id
+        WHERE c.home_id = ?`,
+        [home_id]
+    );
+    return result;
+}

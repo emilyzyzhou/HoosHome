@@ -1,7 +1,14 @@
 import { Router } from "express";
 import { pool } from "../db/pool.js";
+import { getBillsForUser } from "../db/bill_share_sql.js";
+import { getAllHomesForUser, getAllUsersInHome } from "../db/home_membership_sql.js";
+import { getEventsByHomeID } from "../db/event_sql.js";
+import { getChoresForHome } from "../db/chore_assignment_sql.js";
+import { getLeaseByHomeID } from "../db/lease_sql.js";
+import jwt from "jsonwebtoken";
 
 const router = Router();
+const TOKEN_COOKIE = "hh_token";
 
 // POST /home/join
 router.post("/join", async (req, res) => {
@@ -81,6 +88,35 @@ router.post("/create-home", async (req, res) => {
     return res.status(500).json(
       { success: false, message: "An internal server error occurred." }
     );
+  }
+});
+
+// GET /home/dashboard
+router.get("/dashboard", async (req, res) => {
+  try {
+
+    const token = req.cookies?.[TOKEN_COOKIE];
+    const payload = jwt.verify(token, process.env.JWT_SECRET);
+    const userID = payload.user_id; 
+    const homeId = [await getAllHomesForUser(userID)].home_id;
+
+    const roommates = await getAllUsersInHome(homeId);
+    const bills = await getBillsForUser(userID);
+    const events = await getEventsByHomeID(homeId);
+    const chores = await getChoresForHome(homeId);
+    const lease = await getLeaseByHomeID(homeId);
+
+    return res.json({
+      roommates,
+      bills,
+      events,
+      chores,
+      lease,
+    });
+
+  } catch (error) {
+    console.error("Dashboard Error:", error);
+    res.status(500).json({ success: false, message: "Internal server error" });
   }
 });
 
