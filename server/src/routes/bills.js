@@ -174,6 +174,18 @@ router.post("/", requireAuth, async (req, res) => {
       return res.status(400).json({ error: "User not part of any home" });
     }
 
+    const homeId = userHome[0].home_id;
+
+    // count total active members in the home
+    const [memberCount] = await conn.query(
+      `SELECT COUNT(*) as total 
+       FROM HomeMembership 
+       WHERE home_id = ? 
+       AND (end_date IS NULL OR end_date >= CURDATE())`,
+      [homeId]
+    );
+    const totalHomeMembers = memberCount[0].total;
+
     // Validate share amounts
     for (const share of shares) {
       if (split_rule === "custom" && (!share.amount_due || share.amount_due <= 0)) {
@@ -184,49 +196,75 @@ router.post("/", requireAuth, async (req, res) => {
       }
     }
 
-    const homeId = userHome[0].home_id;
-
     await conn.beginTransaction();
 
     // Insert the bill
     const [billResult] = await conn.query(
-      `
-      INSERT INTO Bill
+      `INSERT INTO Bill
         (home_id, description, bill_type, total_amount, due_date, payer_user_id, split_rule)
       VALUES
-        (?, ?, ?, ?, ?, ?, ?)
-      `,
+        (?, ?, ?, ?, ?, ?, ?)`,
       [homeId, description, bill_type || null, total_amount, due_date, userId, split_rule]
     );
 
     const billId = billResult.insertId;
     console.log("Created bill with id:", billId);
 
-    // need to commit here to use the stored procedure
     await conn.commit();
 
-    // if its equal use the stored procedure - if not just slam em in
-    if (split_rule === "equal") {
-      // stored procedure prayge
+    // using stored procedure ONLY if:
+    // 1. split_rule is "equal" AND
+    // 2. ALL home members are selected (shares.length === totalHomeMembers)
+    const useStoredProcedure = split_rule === "equal" && shares.length === totalHomeMembers;
+
+    if (useStoredProcedure) {
+      // Use stored procedure for equal split among ALL members
       await splitBill(billId);
       console.log("Called split_bill stored procedure for bill", billId);
     } else {
-      // Insert shares ONE BY ONE (simple + reliable)
-      for (const share of shares) {
-        console.log("Inserting custom share row:", {
-          bill_id: billId,
-          user_id: share.user_id,
-          amount_due: share.amount_due,
-          status: share.status || "unpaid",
-        });
+      // Manual calculation for custom split OR equal split with subset of members
+      if (split_rule === "equal") {
+        // Equal split among selected members (not all)
+        const shareCount = shares.length;
+        const totalCents = Math.round(total_amount * 100);
+        const baseShareCents = Math.floor(totalCents / shareCount);
+        const remainderCents = totalCents % shareCount;
 
-        await conn.query(
-          `
-          INSERT INTO BillShare (bill_id, user_id, amount_due, status)
-          VALUES (?, ?, ?, ?)
-          `,
-          [billId, share.user_id, share.amount_due, share.status || "unpaid"]
-        );
+        for (let i = 0; i < shares.length; i++) {
+          const share = shares[i];
+          // Distribute remainder cents to first few people
+          const amountCents = i < remainderCents ? baseShareCents + 1 : baseShareCents;
+          const amountDue = amountCents / 100.0;
+
+          console.log("Inserting equal share row (subset):", {
+            bill_id: billId,
+            user_id: share.user_id,
+            amount_due: amountDue,
+            status: share.status || "unpaid",
+          });
+
+          await conn.query(
+            `INSERT INTO BillShare (bill_id, user_id, amount_due, status)
+             VALUES (?, ?, ?, ?)`,
+            [billId, share.user_id, amountDue, share.status || "unpaid"]
+          );
+        }
+      } else {
+        // Custom split
+        for (const share of shares) {
+          console.log("Inserting custom share row:", {
+            bill_id: billId,
+            user_id: share.user_id,
+            amount_due: share.amount_due,
+            status: share.status || "unpaid",
+          });
+
+          await conn.query(
+            `INSERT INTO BillShare (bill_id, user_id, amount_due, status)
+             VALUES (?, ?, ?, ?)`,
+            [billId, share.user_id, share.amount_due, share.status || "unpaid"]
+          );
+        }
       }
     }
 
@@ -245,7 +283,6 @@ router.post("/", requireAuth, async (req, res) => {
     return res.status(500).json({ error: "Server error" });
   }
 });
-
 
 // PUT /bills/:billId - Update a bill
 router.put("/:billId", requireAuth, async (req, res) => {
@@ -267,7 +304,7 @@ router.put("/:billId", requireAuth, async (req, res) => {
     });
 
     const [billRows] = await conn.query(
-      "SELECT payer_user_id FROM Bill WHERE bill_id = ?",
+      "SELECT home_id, payer_user_id FROM Bill WHERE bill_id = ?",
       [billId]
     );
 
@@ -280,6 +317,18 @@ router.put("/:billId", requireAuth, async (req, res) => {
       conn.release();
       return res.status(403).json({ error: "Not authorized" });
     }
+
+    const homeId = billRows[0].home_id;
+
+    // Count total active members in the home
+    const [memberCount] = await conn.query(
+      `SELECT COUNT(*) as total 
+       FROM HomeMembership 
+       WHERE home_id = ? 
+       AND (end_date IS NULL OR end_date >= CURDATE())`,
+      [homeId]
+    );
+    const totalHomeMembers = memberCount[0].total;
 
     await conn.beginTransaction();
 
@@ -294,35 +343,58 @@ router.put("/:billId", requireAuth, async (req, res) => {
     if (Array.isArray(shares) && shares.length > 0) {
       await conn.query("DELETE FROM BillShare WHERE bill_id = ?", [billId]);
 
-      if (split_rule === "equal") {
-        // Use stored procedure for equal split
+      // Use stored procedure ONLY if equal split among ALL members
+      const useStoredProcedure = split_rule === "equal" && shares.length === totalHomeMembers;
+
+      if (useStoredProcedure) {
+        // Use stored procedure for equal split among ALL members
         await conn.query("CALL split_bill(?)", [billId]);
         console.log("Called split_bill stored procedure for updated bill", billId);
       } else {
-        // Validate share amounts
-        for (const share of shares) {
-          if (!share.amount_due || share.amount_due <= 0) {
-            await conn.rollback();
-            conn.release();
-            return res.status(400).json({ 
-              error: "All roommate shares must be greater than $0.00. Please adjust the split amounts." 
-            });
+        // Manual calculation
+        if (split_rule === "equal") {
+          // Equal split among selected members (not all)
+          const shareCount = shares.length;
+          const totalCents = Math.round(total_amount * 100);
+          const baseShareCents = Math.floor(totalCents / shareCount);
+          const remainderCents = totalCents % shareCount;
+
+          for (let i = 0; i < shares.length; i++) {
+            const share = shares[i];
+            // Distribute remainder cents to first few people
+            const amountCents = i < remainderCents ? baseShareCents + 1 : baseShareCents;
+            const amountDue = amountCents / 100.0;
+
+            await conn.query(
+              `INSERT INTO BillShare (bill_id, user_id, amount_due, status)
+               VALUES (?, ?, ?, ?)`,
+              [billId, share.user_id, amountDue, share.status || "unpaid"]
+            );
           }
+        } else {
+          // Custom split - validate amounts
+          for (const share of shares) {
+            if (!share.amount_due || share.amount_due <= 0) {
+              await conn.rollback();
+              conn.release();
+              return res.status(400).json({ 
+                error: "All roommate shares must be greater than $0.00. Please adjust the split amounts." 
+              });
+            }
+          }
+
+          const shareValues = shares.map((s) => [
+            billId,
+            s.user_id,
+            s.amount_due,
+            s.status || "unpaid",
+          ]);
+
+          await conn.query(
+            "INSERT INTO BillShare (bill_id, user_id, amount_due, status) VALUES ?",
+            [shareValues]
+          );
         }
-
-      await conn.query("DELETE FROM BillShare WHERE bill_id = ?", [billId]);
-
-        const shareValues = shares.map((s) => [
-          billId,
-          s.user_id,
-          s.amount_due,
-          s.status || "unpaid",
-        ]);
-
-        await conn.query(
-          "INSERT INTO BillShare (bill_id, user_id, amount_due, status) VALUES ?",
-          [shareValues]
-        );
       }
     }
 
