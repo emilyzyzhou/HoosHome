@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { pool } from "../db/pool.js";
 import { getBillsForUser } from "../db/bill_share_sql.js";
+import { getBillByHome } from "../db/bill_sql.js";
 import { getAllHomesForUser, getAllUsersInHome } from "../db/home_membership_sql.js";
 import { getEventsByHomeID } from "../db/event_sql.js";
 import { getChoresForHome } from "../db/chore_assignment_sql.js";
@@ -94,30 +95,170 @@ router.post("/create-home", async (req, res) => {
 // GET /home/dashboard
 router.get("/dashboard", async (req, res) => {
   try {
-
     const token = req.cookies?.[TOKEN_COOKIE];
+    if (!token) return res.status(401).json({ error: "Not authenticated" });
+
     const payload = jwt.verify(token, process.env.JWT_SECRET);
-    const userID = payload.user_id; 
-    const homeId = [await getAllHomesForUser(userID)].home_id;
+    const userID = payload.user_id;
 
-    const roommates = await getAllUsersInHome(homeId);
-    const bills = await getBillsForUser(userID);
-    const events = await getEventsByHomeID(homeId);
-    const chores = await getChoresForHome(homeId);
-    const lease = await getLeaseByHomeID(homeId);
+    const homes = await getAllHomesForUser(userID);
 
-    return res.json({
-      roommates,
-      bills,
-      events,
-      chores,
-      lease,
-    });
+    if (homes.length === 0) {
+      return res.json({
+        roommates: [],
+        bills: [],
+        events: [],
+        chores: [],
+        lease: null,
+      });
+    }
+
+    const homeId = homes[0].home_id;
+
+    const [roommates, ignoredBills, events, rawChores, leaseArray] = await Promise.all([
+      getAllUsersInHome(homeId),
+      getBillsForUser(userID),   // still called but ignored
+      getEventsByHomeID(homeId),
+      getChoresForHome(homeId),
+      getLeaseByHomeID(homeId),
+    ]);
+
+
+    // Normalize and filter upcoming events (start date today or later), then sort by start date
+
+      const now = new Date();
+      now.setHours(0, 0, 0, 0);
+
+      const sevenDaysAgo = new Date(now);
+      sevenDaysAgo.setDate(now.getDate() - 7);
+
+      const upcoming = [];
+      const past = [];
+
+      for (const e of events) {
+        const start = new Date(e.event_start);
+        const end = e.event_end ? new Date(e.event_end) : null;
+
+        // Determine if the event is over
+        const eventIsOver = end ? end < now : start < now;
+
+        if (!eventIsOver) {
+          // Still active or upcoming
+          upcoming.push(e);
+        } else {
+          // Event is in the past — but hide if older than ~7 days
+          // Use the *end* date if available, else fall back to start date
+          const comparisonDate = end || start;
+
+          if (comparisonDate >= sevenDaysAgo) {
+            past.push(e);
+          }
+        }
+      }
+
+      // Sort sections by start date
+      upcoming.sort((a, b) => new Date(a.event_start) - new Date(b.event_start));
+      past.sort((a, b) => new Date(b.event_start) - new Date(a.event_start)); // newest past first
+
+      // Normalize to frontend shape
+      function normalizeEvent(e) {
+        return {
+          event_id: e.event_id,
+          title: e.title,
+          description: e.description,
+          start_date: e.event_start ? new Date(e.event_start).toISOString().split("T")[0] : null,
+          end_date: e.event_end ? new Date(e.event_end).toISOString().split("T")[0] : null,
+          created_by_user_id: e.created_by_user_id,
+        };
+      }
+
+    const upcomingEvents = upcoming.map(normalizeEvent);
+    const pastEvents = past.map(normalizeEvent);
+
+    // Normalize lease info if available
+    let lease = null;
+    if (leaseArray.length > 0) {
+      const l = leaseArray[0];
+
+      const [landlordRows] = await pool.query(
+        "SELECT name FROM Users WHERE user_id = ?",
+        [l.landlord_id]
+      );
+
+      const landlordName = landlordRows.length > 0 ? landlordRows[0].name : "Unknown";
+
+      lease = {
+        landlord_name: landlordName,
+        start_date: l.start_date.toISOString().split("T")[0],
+        end_date: l.end_date.toISOString().split("T")[0],
+        rent_amount: l.monthly_rent,
+      };
+    }
+
+    // Normalize chore data including assignee names and formatted dates
+    const chores = [];
+
+    if (rawChores.length > 0) {
+      for (const c of rawChores) {
+        const [choreFullRows] = await pool.query(
+          "SELECT title, description, due_date, recurrence FROM Chore WHERE chore_id = ?",
+          [c.chore_id]
+        );
+
+        const full = choreFullRows[0];
+
+        let assigneeName = null;
+        if (c.user_id) {
+          const [userRows] = await pool.query(
+            "SELECT name FROM Users WHERE user_id = ?",
+            [c.user_id]
+          );
+          assigneeName = userRows.length > 0 ? userRows[0].name : null;
+        }
+
+        chores.push({
+          chore_id: c.chore_id,
+          title: full?.title || "Untitled",
+          description: full?.description || "",
+          due_date: full?.due_date ? full.due_date.toISOString().split("T")[0] : null,
+          recurrence: full?.recurrence || null,
+          assignee: assigneeName,
+          status: c.status || "Not Set",
+        });
+      }
+    }
+
+    const allBills = await getBillByHome(homeId);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const upcomingBills = allBills.filter(b => new Date(b.due_date) >= today);
+
+    const bills = upcomingBills.map(b => ({
+      bill_id: b.bill_id,
+      description: b.description,
+      bill_type: b.bill_type,
+      total_amount: b.total_amount,
+      due_date: b.due_date.toISOString().split("T")[0],
+      payer_user_id: b.payer_user_id,
+    }));
+
+  return res.json({
+    roommates,
+    bills,
+    events: {
+      upcoming: upcomingEvents,
+      past: pastEvents,
+    },
+    chores,
+    lease,
+  });
 
   } catch (error) {
     console.error("Dashboard Error:", error);
-    res.status(500).json({ success: false, message: "Internal server error" });
+    return res.status(500).json({ success: false, message: "Internal server error" });
   }
 });
+
 
 export default router;
