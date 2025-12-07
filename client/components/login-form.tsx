@@ -34,7 +34,8 @@ const handleSubmit = async (e: React.FormEvent) => {
 
   try {
     setIsLoading(true);
-    const res = await fetch('https://hooshome-api-wnf7hi5crq-uk.a.run.app/auth/login', {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/auth/login`, {
+    // const res = await fetch('https://hooshome-api-wnf7hi5crq-uk.a.run.app/auth/login', {
       method: "POST",
       credentials: "include",
       headers: { "Content-Type": "application/json" },
