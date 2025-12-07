@@ -1,10 +1,12 @@
 "use client"
 
 import { useState, useEffect, useMemo} from 'react';
+import { Navbar } from "@/components/navbar"
+import { Footer } from "@/components/footer"
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ListChecks, Trash2, PlusCircle, Loader2, Repeat, Calendar, AlignLeft, User, CheckCircle, Edit, X } from "lucide-react";
+import { ListChecks, Trash2, PlusCircle, Loader2, Repeat, Calendar, AlignLeft, User, CheckCircle, Edit, X , AlertCircle, Search} from "lucide-react";
 import { EditChoreForm } from './ui/EditChoreForm';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE || ''; 
@@ -252,7 +254,6 @@ export function ChorePage({homeId}: ChorePageProps) {
             recurrence: formData.recurrence || null,
         };
 
-        // Assignment Data
         const newUser_id_parsed = parseInt(formData.user_id, 10);
         const newUser_id = (formData.user_id && !isNaN(newUser_id_parsed) && newUser_id_parsed > 0) 
             ? newUser_id_parsed 
@@ -338,173 +339,174 @@ export function ChorePage({homeId}: ChorePageProps) {
 
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-orange-50 via-amber-50 to-orange-100 dark:from-slate-950 dark:via-blue-950 dark:to-slate-900 flex flex-col items-center p-8">
-            <Card className="w-full max-w-5xl shadow-2xl border-orange-100 dark:border-blue-800 relative z-10">
-                <CardHeader className="flex flex-row items-center justify-between bg-gradient-to-b from-orange-50 to-transparent dark:from-blue-900/20 dark:to-transparent pb-6">
-                    <CardTitle className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-900 to-orange-600 dark:from-orange-300 dark:to-amber-300 flex items-center gap-3">
-                        <ListChecks className="w-8 h-8"/> Chore Board
-                    </CardTitle>
-                    {HOME_ID_TO_USE && ( 
-                    <div className="text-sm font-medium text-muted-foreground bg-orange-200/50 dark:bg-blue-800/20 p-2 rounded-lg">
-                        Home ID: {HOME_ID_TO_USE}
-                    </div>
-                    )}
-                </CardHeader>
-                <CardContent className="space-y-6">
-                    {/* Error Display */}
-                    {error && (
-                        <div className="p-3 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 rounded-lg text-sm border border-red-300">
-                            {error}
-                        </div>
-                    )}
-                    {/* Add Chore Form */}
-                    <form onSubmit={handleAddChore} className="flex gap-2">
-                        <Input
-                            placeholder="Add a new chore (e.g., Take out trash)"
-                            value={newChoreTitle}
-                            onChange={(e) => setnewChoreTitle(e.target.value)}
-                            disabled={adding}
-                            className="flex-grow bg-white dark:bg-blue-900/30 border-orange-200 dark:border-blue-800 focus:ring-orange-500 dark:focus:ring-orange-400"
-                        />
-                        <Button 
-                            type="submit" 
-                            disabled={adding || !newChoreTitle.trim()}
-                            className="bg-blue-900 hover:bg-blue-800 text-white font-semibold shadow-md"
-                        >
-                            {adding ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <PlusCircle className="w-4 h-4 mr-2"/>}
-                            Add
-                        </Button>
-                    </form>
-                    {/* Search Bar */}
-                    <div className="relative">
-                        <svg 
-                            xmlns="http://www.w3.org/2000/svg" 
-                            className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" 
-                            fill="none" 
-                            viewBox="0 0 24 24" 
-                            stroke="currentColor"
-                        >
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                        </svg>
-                        <Input
-                            type="text"
-                            placeholder="Search chores by name or description..."
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                            className="w-full pl-10 bg-white dark:bg-blue-900/30 border-orange-200 dark:border-blue-800 focus:ring-orange-500 dark:focus:ring-orange-400"
-                        />
-                    </div>
-                    {/* Chore List Display */}
-                    <div className="space-y-3 pt-4">
-                        {/* 2. Render List with Columns */}
-                        {searchChores.length > 0 && (
-                            <div className="grid grid-cols-12 font-semibold text-xs text-muted-foreground uppercase py-2 border-b dark:border-blue-800/50">
-                                <div className="col-span-3 pl-3">Chore</div>
-                                <div className="col-span-2">Due Date</div>
-                                <div className="col-span-2">Recurrence</div>
-                                <div className="col-span-2">Assigned To</div>
-                                <div className="col-span-2">Status</div>
-                                <div className="col-span-1 text-right pr-3"></div> {/* Actions column */}
-                            </div>
-                        )}
+        <div className="min-h-screen flex flex-col bg-gradient-to-br from-orange-50 via-amber-50 to-orange-100 dark:from-slate-950 dark:via-blue-950 dark:to-slate-900">
+            <Navbar />
 
-                        {loading ? (
-                            <div className="flex items-center justify-center p-8 text-muted-foreground">
-                                <Loader2 className="w-6 h-6 mr-2 animate-spin" /> Loading Chores...
+            <main className="flex-1 container mx-auto px-4 py-8">
+                <div className="mb-6 flex items-center justify-between">
+                    <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-900 to-orange-600 dark:from-orange-300 dark:to-amber-300 bg-clip-text text-transparent">
+                        Chores & Tasks
+                    </h1>
+                    {/*{HOME_ID_TO_USE && (
+                        <div className="text-sm font-medium text-blue-900 dark:text-orange-200 bg-white/50 dark:bg-blue-900/20 px-4 py-2 rounded-lg border border-orange-100 dark:border-blue-800">
+                            Home ID: {HOME_ID_TO_USE}
+                        </div>
+                    )} */}
+                </div>
+
+                {error && (
+                    <div className="mb-6 flex items-center gap-2 p-4 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 rounded-lg">
+                        <AlertCircle className="w-5 h-5" />
+                        <span>{error}</span>
+                    </div>
+                )}
+
+                <Card className="border-orange-100 dark:border-blue-800 shadow-lg">
+                    <CardHeader className="bg-gradient-to-r from-orange-50 to-amber-50 dark:from-blue-900/20 dark:to-blue-800/20">
+                        <div className="flex items-center justify-between">
+                            <CardTitle className="flex items-center gap-2 text-blue-900 dark:text-orange-200">
+                                <ListChecks className="w-6 h-6" />
+                                Household Chores
+                            </CardTitle>
+                            <div className="relative">
+                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                                <Input
+                                    placeholder="Search chores..."
+                                    value={searchTerm}
+                                    onChange={(e) => setSearchTerm(e.target.value)}
+                                    className="pl-10 w-64 bg-white dark:bg-slate-900"
+                                />
                             </div>
-                        ) : searchChores.length === 0 ? (
-                            // 2. Updated Empty/No Results Messages
-                            <p className="text-center text-muted-foreground p-8">
-                                {searchTerm ? `No chores found matching "${searchTerm}".` : "No chores yet! Add the first task above."}
-                            </p>
-                        ): (
-                                <ul className="space-y-2">
+                        </div>
+                    </CardHeader>
+                    
+                    <CardContent className="p-0">
+                        {/* Quick Add Section styled to fit the card flow */}
+                        <div className="p-4 bg-orange-50/50 dark:bg-blue-900/10 border-b border-orange-100 dark:border-blue-800">
+                            <form onSubmit={handleAddChore} className="flex gap-2">
+                                <Input
+                                    placeholder="Add a new chore (e.g., Take out trash)"
+                                    value={newChoreTitle}
+                                    onChange={(e) => setnewChoreTitle(e.target.value)}
+                                    disabled={adding}
+                                    className="flex-grow bg-white dark:bg-slate-900"
+                                />
+                                <Button 
+                                    type="submit" 
+                                    disabled={adding || !newChoreTitle.trim()}
+                                    className="bg-gradient-to-r from-blue-900 to-blue-800 hover:from-blue-800 hover:to-blue-700 text-white font-semibold shadow-md whitespace-nowrap"
+                                >
+                                    {adding ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <PlusCircle className="w-4 h-4 mr-2"/>}
+                                    Add Chore
+                                </Button>
+                            </form>
+                        </div>
+
+                        {/* List Headers */}
+                        <div className="max-h-[600px] overflow-y-auto">
+                            <div className="grid grid-cols-12 bg-orange-100 dark:bg-blue-900/30 sticky top-0 z-10 border-b border-orange-100 dark:border-blue-800">
+                                <div className="col-span-3 p-4 text-sm font-semibold text-blue-900 dark:text-orange-200">Chore</div>
+                                <div className="col-span-2 p-4 text-sm font-semibold text-blue-900 dark:text-orange-200">Due Date</div>
+                                <div className="col-span-2 p-4 text-sm font-semibold text-blue-900 dark:text-orange-200">Recurrence</div>
+                                <div className="col-span-2 p-4 text-sm font-semibold text-blue-900 dark:text-orange-200">Assigned To</div>
+                                <div className="col-span-2 p-4 text-sm font-semibold text-blue-900 dark:text-orange-200">Status</div>
+                                <div className="col-span-1 p-4 text-sm font-semibold text-blue-900 dark:text-orange-200 text-right">Actions</div>
+                            </div>
+
+                            {loading ? (
+                                <div className="p-8 text-center text-muted-foreground">
+                                    <Loader2 className="w-6 h-6 mx-auto mb-2 animate-spin" />
+                                    Loading chores...
+                                </div>
+                            ) : searchChores.length === 0 ? (
+                                <div className="p-8 text-center text-muted-foreground">
+                                    {searchTerm ? `No chores found matching "${searchTerm}".` : "No chores yet! Add your first task above."}
+                                </div>
+                            ) : (
+                                <ul>
                                     {searchChores.map((chore) => (
-                                        // 1. Conditional rendering: Show form OR static details
                                         chore.chore_id === editingChoreId ? (
-                                            <EditChoreForm
-                                            key={chore.chore_id}
-                                            formData={formData}
-                                            isUpdating={isUpdating}
-                                            handleFormChange={handleFormChange}
-                                            handleUpdateChore={handleUpdateChore}
-                                            cancelEditing={cancelEditing}
-                                            users={users}
-                                            />
-    
+                                            <ul key={chore.chore_id} className="border-b border-orange-100 dark:border-blue-800 bg-orange-50/50 dark:bg-blue-900/10 p-4">
+                                                <EditChoreForm
+                                                    formData={formData}
+                                                    isUpdating={isUpdating}
+                                                    handleFormChange={handleFormChange}
+                                                    handleUpdateChore={handleUpdateChore}
+                                                    cancelEditing={cancelEditing}
+                                                    users={users}
+                                                />
+                                            </ul>
                                         ) : (
-                                            // --- STATIC CHORE DISPLAY ---
-                                            <li key={chore.chore_id} className="grid grid-cols-12 items-center p-3 bg-white dark:bg-blue-900/10 border border-orange-100 dark:border-blue-800/50 rounded-lg shadow-sm hover:shadow-md transition-shadow">
+                                            <li key={chore.chore_id} className="grid grid-cols-12 items-center border-b border-orange-100 dark:border-blue-800 hover:bg-orange-50 dark:hover:bg-blue-900/10 transition-colors">
                                                 
                                                 {/* TITLE & DESCRIPTION */}
-                                                <div className="col-span-3 flex flex-col pl-3">
-                                                    <span className="font-semibold text-blue-900 dark:text-orange-100">
+                                                <div className="col-span-3 p-4 flex flex-col">
+                                                    <span className="font-medium text-slate-900 dark:text-slate-100">
                                                         {chore.title}
                                                     </span>
                                                     {chore.description && (
                                                         <span className="text-xs text-muted-foreground flex items-center gap-1 mt-1">
-                                                            <AlignLeft className="w-3 h-3 text-gray-500 dark:text-gray-400" />
+                                                            <AlignLeft className="w-3 h-3" />
                                                             {chore.description}
                                                         </span>
                                                     )}
                                                 </div>
 
                                                 {/* DUE DATE */}
-                                                <div className="col-span-2 text-sm flex items-center gap-2">
-                                                    <Calendar className="w-4 h-4 text-orange-500 dark:text-amber-400" />
+                                                <div className="col-span-2 p-4 text-sm flex items-center gap-2">
+                                                    <Calendar className="w-4 h-4 text-muted-foreground" />
                                                     {formatDate(chore.due_date)}
                                                 </div>
 
                                                 {/* RECURRENCE */}
-                                                <div className="col-span-2 text-sm flex items-center gap-2">
-                                                    <Repeat className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                                                <div className="col-span-2 p-4 text-sm flex items-center gap-2">
+                                                    <Repeat className="w-4 h-4 text-muted-foreground" />
                                                     {chore.recurrence || "One-time"}
                                                 </div>
-                                                {/* ASSIGNED TO*/}
-                                                <div className="col-span-2 text-sm flex items-center gap-2">
-                                                    <User className={`w-4 h-4 ${chore.user_id ? 'text-green-600 dark:text-green-400' : 'text-gray-400'}`} />
+
+                                                {/* ASSIGNED TO */}
+                                                <div className="col-span-2 p-4 text-sm flex items-center gap-2">
+                                                    <User className={`w-4 h-4 ${chore.user_id ? 'text-blue-600 dark:text-blue-400' : 'text-gray-400'}`} />
                                                     <span className={chore.user_id ? 'font-medium' : 'text-muted-foreground italic'}>
                                                         {users.find(u => u.user_id === chore.user_id)?.name || 'Unassigned'}
                                                     </span>
                                                 </div>
 
                                                 {/* STATUS */}
-                                                <div className="col-span-2 text-sm flex items-center gap-2">
+                                                <div className="col-span-2 p-4">
                                                     {chore.status === 'Complete' ? (
-                                                        <>
-                                                            <CheckCircle className="w-4 h-4 text-green-500" />
-                                                            <span className="text-green-600 font-semibold">Complete</span>
-                                                        </>
+                                                        <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400">
+                                                            <CheckCircle className="w-3 h-3" />
+                                                            Complete
+                                                        </span>
                                                     ) : chore.status === 'Pending' ? (
-                                                        <>
-                                                            <Loader2 className="w-4 h-4 text-amber-500 animate-spin" />
-                                                            <span className="text-amber-600">Pending</span>
-                                                        </>
+                                                        <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold bg-orange-100 text-orange-800 dark:bg-orange-900/20 dark:text-orange-400">
+                                                            <Loader2 className="w-3 h-3 animate-spin" />
+                                                            Pending
+                                                        </span>
                                                     ) : (
-                                                        <span className="text-muted-foreground italic">No Status</span>
+                                                        <span className="text-muted-foreground text-sm italic">No Status</span>
                                                     )}
                                                 </div>
 
                                                 {/* ACTIONS COLUMN */}
-                                                <div className="col-span-1 flex justify-end pr-3 gap-1">
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="sm"
+                                                <div className="col-span-1 p-4 flex justify-end gap-2">
+                                                    <button
                                                         onClick={() => startEditing(chore)}
-                                                        className="text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 p-2 h-8 w-8"
+                                                        className="p-2 hover:bg-orange-200 dark:hover:bg-blue-800 rounded text-blue-900 dark:text-orange-200 transition-colors"
                                                         disabled={isUpdating}
+                                                        title="Edit chore"
                                                     >
                                                         <Edit className="w-4 h-4" />
-                                                    </Button>
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="sm"
+                                                    </button>
+                                                    <button
                                                         onClick={() => handleDeleteChore(chore.chore_id)}
-                                                        className="text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 p-2 h-8 w-8"
+                                                        className="p-2 hover:bg-red-100 dark:hover:bg-red-900/20 rounded text-red-600 dark:text-red-400 transition-colors"
                                                         disabled={isUpdating}
+                                                        title="Delete chore"
                                                     >
                                                         <Trash2 className="w-4 h-4" />
-                                                    </Button>
+                                                    </button>
                                                 </div>
                                             </li>
                                         )
@@ -514,6 +516,9 @@ export function ChorePage({homeId}: ChorePageProps) {
                         </div>
                     </CardContent>
                 </Card>
-            </div>
-        );
+            </main>
+
+            <Footer />
+        </div>
+    );
 }
