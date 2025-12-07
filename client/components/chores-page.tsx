@@ -4,7 +4,8 @@ import { useState, useEffect} from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ListChecks, Trash2, PlusCircle, Loader2, Repeat, Calendar, AlignLeft } from "lucide-react";
+import { ListChecks, Trash2, PlusCircle, Loader2, Repeat, Calendar, AlignLeft, User, CheckCircle, Edit, X } from "lucide-react";
+import { EditChoreForm } from './ui/EditChoreForm';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE || ''; 
 
@@ -15,6 +16,8 @@ interface Chore {
     home_id: number;
     description: string | null;
     recurrence: string | null;
+    user_id: number | null;
+    is_completed: 0 | 1 | null ;
 }
 
 interface ChorePageProps {
@@ -34,6 +37,12 @@ const formatDate = (dateString: string | null) => {
         return dateString; 
     }
 };
+interface ChoreFormData {
+    title: string;
+    description: string;
+    due_date: string;
+    recurrence: string;
+}
 
 export function ChorePage({homeId}: ChorePageProps) {
     const [chores, setChores] = useState<Chore[]>([]);
@@ -41,6 +50,15 @@ export function ChorePage({homeId}: ChorePageProps) {
     const [loading, setLoading] = useState(true);
     const [adding, setAdding] = useState(false);
     const [error, setError] = useState<string | null>(null);
+
+    const [editingChoreId, setEditingChoreId] = useState<number | null>(null);
+    const [formData, setFormData] = useState<ChoreFormData>({ 
+        title: '', 
+        description: '', 
+        due_date: '', 
+        recurrence: '' 
+    });
+    const [isUpdating, setIsUpdating] = useState(false);
 
     const HOME_ID_TO_USE = homeId;
 
@@ -132,13 +150,67 @@ export function ChorePage({homeId}: ChorePageProps) {
             setChores(originalChores); // Revert on error
         }
     };
-    // update chore handler: TODO
 
+    // update chore handlers
+    const startEditing = (chore: Chore) => {
+        setEditingChoreId(chore.chore_id);
+        setFormData({
+            title: chore.title || '',
+            description: chore.description || '',
+            // yyyy-mm-dd
+            due_date: chore.due_date ? new Date(chore.due_date).toISOString().split('T')[0] : '', 
+            recurrence: chore.recurrence || 'One-time',
+        });
+        setError(null);
+    };
+    const handleFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+        const { name, value } = e.target;
+        setFormData(prev => ({ ...prev, [name]: value }));
+    };
+    const handleUpdateChore = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!editingChoreId || !formData.title.trim()) return;
+        setIsUpdating(true);
+        setError(null);
+        const updatedChoreData = {
+            title: formData.title.trim(),
+            description: formData.description.trim() || null,
+            due_date: formData.due_date || null,
+            recurrence: formData.recurrence || null,
+        };
+        try {
+            const res = await fetch(`${API_BASE_URL}/chore/${editingChoreId}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(updatedChoreData),
+            });
+            const data = await res.json();
 
+            if (res.ok && data.success) {
+                setChores(prev => prev.map(c =>
+                    c.chore_id === editingChoreId
+                        ? { ...c, ...updatedChoreData } as Chore 
+                        : c
+                ));
+                setEditingChoreId(null);
+            } else {
+                throw new Error(data.message || "Failed to update chore.");
+            }
+        } catch (err) {
+            console.error("Update Chore failed:", err);
+            setError("Error updating chore.");
+        } finally {
+            setIsUpdating(false);
+        }
+    };
+    const cancelEditing = () => {
+        setEditingChoreId(null);
+        setIsUpdating(false);
+    };
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-orange-50 via-amber-50 to-orange-100 dark:from-slate-950 dark:via-blue-950 dark:to-slate-900 flex flex-col items-center p-8">
-            <Card className="w-full max-w-2xl shadow-2xl border-orange-100 dark:border-blue-800 relative z-10">
+            <Card className="w-full max-w-5xl shadow-2xl border-orange-100 dark:border-blue-800 relative z-10">
                 <CardHeader className="flex flex-row items-center justify-between bg-gradient-to-b from-orange-50 to-transparent dark:from-blue-900/20 dark:to-transparent pb-6">
                     <CardTitle className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-900 to-orange-600 dark:from-orange-300 dark:to-amber-300 flex items-center gap-3">
                         <ListChecks className="w-8 h-8"/> Chore Board
@@ -149,7 +221,6 @@ export function ChorePage({homeId}: ChorePageProps) {
                     </div>
                     )}
                 </CardHeader>
-
                 <CardContent className="space-y-6">
                     {/* Error Display */}
                     {error && (
@@ -157,7 +228,6 @@ export function ChorePage({homeId}: ChorePageProps) {
                             {error}
                         </div>
                     )}
-
                     {/* Add Chore Form */}
                     <form onSubmit={handleAddChore} className="flex gap-2">
                         <Input
@@ -176,18 +246,18 @@ export function ChorePage({homeId}: ChorePageProps) {
                             Add
                         </Button>
                     </form>
-
                     {/* Chore List Display */}
                     <div className="space-y-3 pt-4">
-                        
                         {/* 2. Render List with Columns */}
                         {chores.length > 0 && (
                             // Add column headers
                             <div className="grid grid-cols-12 font-semibold text-xs text-muted-foreground uppercase py-2 border-b dark:border-blue-800/50">
-                                <div className="col-span-4 pl-3">Chore</div>
-                                <div className="col-span-3">Due Date</div>
-                                <div className="col-span-3">Recurrence</div>
-                                <div className="col-span-2 text-right pr-3">Actions</div>
+                                <div className="col-span-3 pl-3">Chore</div>
+                                <div className="col-span-2">Due Date</div>
+                                <div className="col-span-2">Recurrence</div>
+                                <div className="col-span-2">Assigned To</div>
+                                <div className="col-span-2">Status</div>
+                                <div className="col-span-1 text-right pr-3"></div> {/* Actions column */}
                             </div>
                         )}
 
@@ -199,54 +269,103 @@ export function ChorePage({homeId}: ChorePageProps) {
                             <p className="text-center text-muted-foreground p-8">
                                 No chores yet! Add the first task above.
                             </p>
-                        ) : (
-                            <ul className="space-y-2">
-                                {chores.map((chore) => (
-                                    <li key={chore.chore_id} className="grid grid-cols-12 items-center p-3 bg-white dark:bg-blue-900/10 border border-orange-100 dark:border-blue-800/50 rounded-lg shadow-sm hover:shadow-md transition-shadow">
-                                        
-                                        {/* TITLE & DESCRIPTION */}
-                                        <div className="col-span-4 flex flex-col pl-3">
-                                            <span className="font-semibold text-blue-900 dark:text-orange-100">
-                                                {chore.title}
-                                            </span>
-                                            {chore.description && (
-                                                <span className="text-xs text-muted-foreground flex items-center gap-1 mt-1">
-                                                    <AlignLeft className="w-3 h-3 text-gray-500 dark:text-gray-400" />
-                                                    {chore.description}
-                                                </span>
-                                            )}
-                                        </div>
+                        ) : chores.length > 0 && (
+                                <ul className="space-y-2">
+                                    {chores.map((chore) => (
+                                        // 1. Conditional rendering: Show form OR static details
+                                        chore.chore_id === editingChoreId ? (
+                                            <EditChoreForm
+                                            key={chore.chore_id}
+                                            formData={formData}
+                                            isUpdating={isUpdating}
+                                            handleFormChange={handleFormChange}
+                                            handleUpdateChore={handleUpdateChore}
+                                            cancelEditing={cancelEditing}
+                                            />
+    
+                                        ) : (
+                                            // --- STATIC CHORE DISPLAY ---
+                                            <li key={chore.chore_id} className="grid grid-cols-12 items-center p-3 bg-white dark:bg-blue-900/10 border border-orange-100 dark:border-blue-800/50 rounded-lg shadow-sm hover:shadow-md transition-shadow">
+                                                
+                                                {/* TITLE & DESCRIPTION */}
+                                                <div className="col-span-3 flex flex-col pl-3">
+                                                    <span className="font-semibold text-blue-900 dark:text-orange-100">
+                                                        {chore.title}
+                                                    </span>
+                                                    {chore.description && (
+                                                        <span className="text-xs text-muted-foreground flex items-center gap-1 mt-1">
+                                                            <AlignLeft className="w-3 h-3 text-gray-500 dark:text-gray-400" />
+                                                            {chore.description}
+                                                        </span>
+                                                    )}
+                                                </div>
 
-                                        {/* DUE DATE */}
-                                        <div className="col-span-3 text-sm flex items-center gap-2">
-                                            <Calendar className="w-4 h-4 text-orange-500 dark:text-amber-400" />
-                                            {formatDate(chore.due_date)}
-                                        </div>
+                                                {/* DUE DATE */}
+                                                <div className="col-span-2 text-sm flex items-center gap-2">
+                                                    <Calendar className="w-4 h-4 text-orange-500 dark:text-amber-400" />
+                                                    {formatDate(chore.due_date)}
+                                                </div>
 
-                                        {/* RECURRENCE */}
-                                        <div className="col-span-3 text-sm flex items-center gap-2">
-                                            <Repeat className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-                                            {chore.recurrence || "One-time"}
-                                        </div>
+                                                {/* RECURRENCE */}
+                                                <div className="col-span-2 text-sm flex items-center gap-2">
+                                                    <Repeat className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                                                    {chore.recurrence || "One-time"}
+                                                </div>
 
-                                        {/* ACTIONS */}
-                                        <div className="col-span-2 flex justify-end pr-3">
-                                            <Button
-                                                variant="ghost"
-                                                size="sm"
-                                                onClick={() => handleDeleteChore(chore.chore_id)}
-                                                className="text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20"
-                                            >
-                                                <Trash2 className="w-4 h-4" />
-                                            </Button>
-                                        </div>
-                                    </li>
-                                ))}
-                            </ul>
-                        )}
-                    </div>
-                </CardContent>
-            </Card>
-        </div>
-    );
+                                                {/* ASSIGNED TO */}
+                                                <div className="col-span-2 text-sm flex items-center gap-2">
+                                                    <User className={`w-4 h-4 ${chore.user_id ? 'text-green-600 dark:text-green-400' : 'text-gray-400'}`} />
+                                                    <span className={chore.user_id ? 'font-medium' : 'text-muted-foreground italic'}>
+                                                        {chore.user_id ? `User ID: ${chore.user_id}` : 'Unassigned'}
+                                                    </span>
+                                                </div>
+
+                                                {/* STATUS */}
+                                                <div className="col-span-2 text-sm flex items-center gap-2">
+                                                    {chore.is_completed === 1 ? (
+                                                        <>
+                                                            <CheckCircle className="w-4 h-4 text-green-500" />
+                                                            <span className="text-green-600 font-semibold">Complete</span>
+                                                        </>
+                                                    ) : chore.is_completed === 0 ? (
+                                                        <>
+                                                            <Loader2 className="w-4 h-4 text-amber-500 animate-spin" />
+                                                            <span className="text-amber-600">Pending</span>
+                                                        </>
+                                                    ) : (
+                                                        <span className="text-muted-foreground italic">No Status</span>
+                                                    )}
+                                                </div>
+
+                                                {/* ACTIONS COLUMN */}
+                                                <div className="col-span-1 flex justify-end pr-3 gap-1">
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="sm"
+                                                        onClick={() => startEditing(chore)}
+                                                        className="text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 p-2 h-8 w-8"
+                                                        disabled={isUpdating}
+                                                    >
+                                                        <Edit className="w-4 h-4" />
+                                                    </Button>
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="sm"
+                                                        onClick={() => handleDeleteChore(chore.chore_id)}
+                                                        className="text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 p-2 h-8 w-8"
+                                                        disabled={isUpdating}
+                                                    >
+                                                        <Trash2 className="w-4 h-4" />
+                                                    </Button>
+                                                </div>
+                                            </li>
+                                        )
+                                    ))}
+                                </ul>
+                            )}
+                        </div>
+                    </CardContent>
+                </Card>
+            </div>
+        );
 }

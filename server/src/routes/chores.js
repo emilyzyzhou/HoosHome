@@ -80,4 +80,40 @@ router.delete("/:choreId", async (req, res) => {
   }
 });
 
+// PUT /chore/:choreId
+router.put("/:choreId", async (req, res) => {
+  try {
+    const { choreId } = req.params;
+    const { title, description, due_date, recurrence } = req.body;
+
+    if (!choreId) {
+      return res.status(400).json({ success: false, message: "Chore ID is required for update." });
+    }
+
+    const [result] = await pool.query(
+      `
+      UPDATE Chore 
+      SET 
+        title = ?, 
+        description = ?, 
+        due_date = ?, 
+        recurrence = ? 
+      WHERE chore_id = ?
+      `,
+      [title, description, due_date, recurrence, choreId]
+    );
+
+    if (result.affectedRows === 0) {
+      const [check] = await pool.query('SELECT chore_id FROM Chore WHERE chore_id = ?', [choreId]);
+      if (check.length === 0) {
+        return res.status(404).json({ success: false, message: "Chore not found." });
+      }
+    }
+    res.json({ success: true, message: "Chore updated successfully." });
+  } catch (e) {
+    console.error("PUT Chore Error:", e);
+    res.status(500).json({ success: false, message: "Server error updating chore." });
+  }
+});
+
 export default router;
