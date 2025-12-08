@@ -1,5 +1,6 @@
 import { Router } from "express";
 import jwt from "jsonwebtoken";
+import { pool } from "../db/pool.js";
 import { getUserByID, updateUser } from "../db/user_sql.js";
 import { getEmergencyContactsByUserID, addEmergencyContact, deleteEmergencyContact } from "../db/emergency_contact_sql.js";
 import bcrypt from "bcrypt";
@@ -22,7 +23,8 @@ router.get("/get-info", async (req, res) => {
         name: user.name, 
         email: user.email, 
         phone_number: user.phone_number, 
-        bill_info: user.billing_info, 
+        payment_method: user.payment_method,
+        payment_handle: user.payment_handle,
         prof_link: user.profile_link
       }
     });
@@ -32,17 +34,26 @@ router.get("/get-info", async (req, res) => {
   }
 });
 
-// note that THIS DOESN'T HANDLE PASSWORD OR pfp link (if we do that) because I think those should be separate
+// note that THIS DOESN'T HANDLE PASSWORD I think it should be separate
 router.post("/update-info", async (req, res) => {
   const token = req.cookies?.[TOKEN_COOKIE];
   const payload = jwt.verify(token, process.env.JWT_SECRET);
   const userID = payload.user_id;
 
-  const { name, email, phoneNumber, billingInfo } = req.body || {};
+  const { name, email, phoneNumber, paymentMethod, paymentHandle, socialLink } = req.body || {};
   try {
-    // need to grab the hash & pfp link first to feed those back in since this func doesn't deal with those
-    const [user] = await getUserByID(userID);
-    await updateUser(userID, name, email, user.password, phoneNumber, billingInfo, user.profile_link);
+    // Convert empty strings to null for ENUM columns
+    const cleanPaymentMethod = paymentMethod && paymentMethod.trim() !== '' ? paymentMethod : null;
+    const cleanPaymentHandle = paymentHandle && paymentHandle.trim() !== '' ? paymentHandle : null;
+    
+    // Update with new payment info
+    await pool.query(
+      `UPDATE Users 
+       SET name = ?, email = ?, phone_number = ?, payment_method = ?, payment_handle = ?, profile_link = ?
+       WHERE user_id = ?`,
+      [name, email, phoneNumber || null, cleanPaymentMethod, cleanPaymentHandle, socialLink || null, userID]
+    );
+    
     return res.json({ success: true, message: "User info updated successfully." });
   } catch (error) {
     console.error("Updating user failed, somehow: ", error);
@@ -61,7 +72,7 @@ router.post("/update-password", async (req, res) => {
     const ok = await bcrypt.compare(currentPassword, user.password);
     const hash = await bcrypt.hash(newPassword, 12); 
     if (!ok) return res.status(401).json({ error: "Invalid current password." });
-    else await updateUser(userID, user.name, user.email, hash, user.phone_number, user.billing_info, user.profile_link);
+    else await updateUser(userID, user.name, user.email, hash, user.phone_number, user.profile_link);
     return res.json({ success: true, message: "User password updated successfully." });
   } catch (error) {
     console.error("Updating password failed, somehow: ", error);
