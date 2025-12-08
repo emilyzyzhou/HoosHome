@@ -8,7 +8,7 @@ export default function Join() {
   const router = useRouter(); 
 
   const handleHomeJoined = (homeId: number) => {
-    router.push(`/chore?homeId=${homeId}`);
+    router.push("/home");
   };
 
   return <JoinPage onHomeJoined={handleHomeJoined} />;
