@@ -9,6 +9,8 @@ import profileSettingsRoutes from "./routes/profile-settings.js";
 
 import choreRoutes from "./routes/chores.js";
 import billsRoutes from "./routes/bills.js";
+import leaseRoutes from "./routes/lease.js";
+
 import { pool } from "./db/pool.js";
 import { loginLimiter, generalLimiter } from "./middleware/rateLimiter.js";
 
@@ -36,6 +38,7 @@ app.use("/profile-settings", profileSettingsRoutes);
 app.use("/home", homeRoutes);
 app.use("/chore", choreRoutes);
 app.use("/bills", billsRoutes);
+app.use("/lease", leaseRoutes);
 
 
 app.get("/db/health", async (req, res) => {
