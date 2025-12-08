@@ -2,30 +2,58 @@
 
 import { useState, useEffect } from "react"
 import Link from "next/link"
-import { useRouter } from "next/navigation"
+import { useRouter, usePathname } from "next/navigation"
 import { Home, LogOut } from "lucide-react"
 
 export function Navbar() {
   const router = useRouter()
+  const pathname = usePathname()
   const [isLoggedIn, setIsLoggedIn] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
+  const [homeId, setHomeId] = useState<number | null>(null)
 
   useEffect(() => {
     // Check if user is authenticated by calling /auth/me endpoint
-    const checkAuth = async () => {
+    const checkAuthAndHome = async () => {
       try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/auth/me`, {
+        const authRes = await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/auth/me`, {
           credentials: "include",
         })
-        setIsLoggedIn(res.ok)
-      } catch {
+
+        if (authRes.ok) {
+          setIsLoggedIn(true)
+
+          // fetch Home ID via roommates endpoint
+          try {
+            const homeRes = await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/home/roommates`, {
+              credentials: "include",
+            })
+            
+            if (homeRes.ok) {
+              const homeData = await homeRes.json()
+              // Check if we have roommates (user is always a roommate in their own home)
+              if (homeData.homeId) {
+                console.log("Setting Home ID:", homeData.homeId)
+                setHomeId(homeData.homeId)
+              } else {
+                setHomeId(null)
+              }
+            }
+          } catch (err) {
+            console.error("Failed to fetch home info", err)
+          }
+        } else {
+          setIsLoggedIn(false)
+        }
+      } catch (e) {
         setIsLoggedIn(false)
       } finally {
         setIsLoading(false)
       }
     }
-    checkAuth()
-  }, [])
+
+    checkAuthAndHome()
+  }, [pathname])
 
   const handleLogout = async () => {
     try {
@@ -35,6 +63,7 @@ export function Navbar() {
       })
       setIsLoggedIn(false)
       router.push("/")
+      router.refresh()
     } catch (e) {
       console.error("Logout failed", e)
     }
@@ -65,6 +94,13 @@ export function Navbar() {
                 >
                   My Home
                 </Link>
+                  <Link
+                    href={`/chore?homeId=${homeId}`}
+                    className="inline-flex items-center justify-center rounded-md text-sm font-semibold transition-colors bg-gradient-to-r from-blue-900 to-blue-800 hover:from-blue-800 hover:to-blue-700 text-white shadow-lg h-9 px-4"
+                  >
+                    Chores
+                  </Link>
+                
                 <Link
                   href="/profile-settings"
                   className="inline-flex items-center justify-center rounded-md text-sm font-semibold transition-colors bg-gradient-to-r from-blue-900 to-blue-800 hover:from-blue-800 hover:to-blue-700 text-white shadow-lg h-9 px-4"
