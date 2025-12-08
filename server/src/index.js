@@ -7,6 +7,7 @@ import authRoutes from "./routes/auth.js";
 import homeRoutes from "./routes/home.js";
 import profileSettingsRoutes from "./routes/profile-settings.js";
 
+import eventRoutes from "./routes/events.js";
 import choreRoutes from "./routes/chores.js";
 import billsRoutes from "./routes/bills.js";
 import leaseRoutes from "./routes/lease.js";
@@ -39,7 +40,7 @@ app.use("/home", homeRoutes);
 app.use("/chore", choreRoutes);
 app.use("/bills", billsRoutes);
 app.use("/lease", leaseRoutes);
-
+app.use("/events", eventRoutes);
 
 app.get("/db/health", async (req, res) => {
   try {
