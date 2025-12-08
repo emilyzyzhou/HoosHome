@@ -105,7 +105,7 @@ export function LeasePageComponent({ homeId }: LeasePageProps) {
 
       <main className="flex-1 container mx-auto px-4 py-8 flex flex-col items-center">
         <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-900 to-orange-600 dark:from-orange-300 dark:to-amber-300 bg-clip-text text-transparent mb-8">
-          Lease & Landlord
+          Lease
         </h1>
 
         {isLoading ? (
