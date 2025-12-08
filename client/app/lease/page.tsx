@@ -27,7 +27,7 @@ function LeasePageContent() {
         // Otherwise, fetch it from the backend
         const fetchHomeId = async () => {
             try {
-                const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/home/roommates`, {
+                const res = await fetch(`https://hooshome-api-518521047014.us-east4.run.app/home/roommates`, {
                     credentials: 'include'
                 });
                 
