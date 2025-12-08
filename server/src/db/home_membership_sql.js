@@ -4,7 +4,7 @@ import { pool } from "./pool.js";
 // and profile link because it's unused
 export async function getAllUsersInHome(home_id) {
     const [result] = await pool.query(
-        "SELECT u.user_id, u.name, u.email, u.phone_number, u.billing_info FROM HomeMembership AS hm INNER JOIN Users AS u ON hm.user_id=u.user_id WHERE home_id = ? ORDER BY u.name",
+        "SELECT u.user_id, u.name, u.email, u.phone_number, u.payment_method, u.payment_handle FROM HomeMembership AS hm INNER JOIN Users AS u ON hm.user_id=u.user_id WHERE home_id = ? ORDER BY u.name",
         [home_id]
     );
     return result;
