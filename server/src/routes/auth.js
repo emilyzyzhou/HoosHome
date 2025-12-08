@@ -38,7 +38,7 @@ function setAuthCookie(res, payload) {
 // POST /auth/register
 router.post("/register", async (req, res) => {
   try {
-    const { name, email, password, phone_number, billing_info, profile_link } = req.body || {};
+    const { name, email, password, phone_number, profile_link } = req.body || {};
     if (!name || !email || !password) {
       return res.status(400).json({ error: "Missing fields" });
     }
@@ -50,7 +50,7 @@ router.post("/register", async (req, res) => {
     const hash = await bcrypt.hash(password, 12);
 
     // Insert — include all columns you require; use NULL for optional fields
-    const result = await addUser(name, email, hash, phone_number, billing_info, profile_link);
+    const result = await addUser(name, email, hash, phone_number, profile_link);
 
     setAuthCookie(res, { user_id: result.insertId, email });
     res.json({ ok: true, user_id: result.insertId });
