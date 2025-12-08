@@ -1,5 +1,6 @@
 "use client"
 
+import { Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { LeasePageComponent } from "@/components/lease-page";
@@ -7,7 +8,7 @@ import { AlertCircle, Loader2 } from 'lucide-react';
 import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
 
-export default function LeasePage() {
+function LeasePageContent() {
     const searchParams = useSearchParams();
     const router = useRouter();
     const homeIdParam = searchParams.get('homeId');
@@ -84,4 +85,20 @@ export default function LeasePage() {
     }
 
     return <LeasePageComponent homeId={homeId} />;
+}
+
+export default function LeasePage() {
+    return (
+        <Suspense fallback={
+            <div className="min-h-screen flex flex-col">
+                <Navbar />
+                <div className="flex-1 flex items-center justify-center">
+                    <Loader2 className="w-6 h-6 animate-spin" />
+                </div>
+                <Footer />
+            </div>
+        }>
+            <LeasePageContent />
+        </Suspense>
+    );
 }
