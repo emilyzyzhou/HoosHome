@@ -59,10 +59,10 @@ export function BillsPage() {
       setError("")
 
       const [outstandingRes, createdRes] = await Promise.all([
-        fetch(`${process.env.NEXT_PUBLIC_API_BASE}/bills/outstanding?filter=${outstandingFilter}`, {
+        fetch(`https://hooshome-api-518521047014.us-east4.run.app/bills/outstanding?filter=${outstandingFilter}`, {
           credentials: "include",
         }),
-        fetch(`${process.env.NEXT_PUBLIC_API_BASE}/bills/created`, {
+        fetch(`https://hooshome-api-518521047014.us-east4.run.app/bills/created`, {
           credentials: "include",
         }),
       ])
@@ -94,7 +94,7 @@ export function BillsPage() {
       const bill = createdBills.find(b => b.bill_id === billId)
       if (bill && !bill.shares) {
         try {
-          const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/bills/${billId}/shares`, {
+          const res = await fetch(`https://hooshome-api-518521047014.us-east4.run.app/bills/${billId}/shares`, {
             credentials: "include",
           })
           if (res.ok) {
@@ -120,7 +120,7 @@ export function BillsPage() {
     // Fetch shares if not already loaded
     if (!bill.shares) {
       try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/bills/${billId}/shares`, {
+        const res = await fetch(`https://hooshome-api-518521047014.us-east4.run.app/bills/${billId}/shares`, {
           credentials: "include",
         })
         if (res.ok) {
@@ -140,7 +140,7 @@ export function BillsPage() {
     if (!confirm("Are you sure you want to delete this bill?")) return
 
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/bills/${billId}`, {
+      const res = await fetch(`https://hooshome-api-518521047014.us-east4.run.app/bills/${billId}`, {
         method: "DELETE",
         credentials: "include",
       })

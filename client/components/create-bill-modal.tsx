@@ -61,7 +61,7 @@ export function CreateBillModal({
     if (!bill?.bill_id) return
     
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/bills/${bill.bill_id}/shares`, {
+      const res = await fetch(`https://hooshome-api-518521047014.us-east4.run.app/bills/${bill.bill_id}/shares`, {
         credentials: "include",
       })
       if (res.ok) {
@@ -93,7 +93,7 @@ export function CreateBillModal({
 
   const fetchRoommates = async () => {
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/home/roommates`, {
+      const res = await fetch(`https://hooshome-api-518521047014.us-east4.run.app/home/roommates`, {
         credentials: "include",
       })
       if (res.ok) {
@@ -174,8 +174,8 @@ export function CreateBillModal({
     try {
       setIsLoading(true)
       const url = isEditMode && bill
-        ? `${process.env.NEXT_PUBLIC_API_BASE}/bills/${bill.bill_id}`
-        : `${process.env.NEXT_PUBLIC_API_BASE}/bills`
+        ? `https://hooshome-api-518521047014.us-east4.run.app/bills/${bill.bill_id}`
+        : `https://hooshome-api-518521047014.us-east4.run.app/bills`
       
       const res = await fetch(url, {
         method: isEditMode ? "PUT" : "POST",

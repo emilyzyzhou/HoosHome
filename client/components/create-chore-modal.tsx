@@ -69,7 +69,7 @@ export function CreateChoreModal({
       // 1. CREATE Logic
       if (!isEditMode) {
         // Create the base chore first (assuming API pattern from previous code)
-        const createRes = await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/chore/${homeId}`, {
+        const createRes = await fetch(`https://hooshome-api-518521047014.us-east4.run.app/chore/${homeId}`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ title: title.trim() }),
@@ -94,7 +94,7 @@ export function CreateChoreModal({
         recurrence: recurrence || null
       }
 
-      const updateRes = await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/chore/${currentChoreId}`, {
+      const updateRes = await fetch(`https://hooshome-api-518521047014.us-east4.run.app/chore/${currentChoreId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(coreUpdate),
@@ -111,7 +111,7 @@ export function CreateChoreModal({
       if (newUser_id !== oldUser_id) {
         // Remove old assignment if it exists
         if (oldUser_id !== null) {
-          await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/chore/assignment`, {
+          await fetch(`https://hooshome-api-518521047014.us-east4.run.app/chore/assignment`, {
             method: 'DELETE',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ chore_id: currentChoreId, user_id: oldUser_id }),
@@ -119,7 +119,7 @@ export function CreateChoreModal({
         }
         // Create new assignment if user selected
         if (newUser_id !== null) {
-          await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/chore/assignment`, {
+          await fetch(`https://hooshome-api-518521047014.us-east4.run.app/chore/assignment`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ chore_id: currentChoreId, user_id: newUser_id, status: status }),
@@ -128,7 +128,7 @@ export function CreateChoreModal({
       } 
       // Handle Status Change (Same User)
       else if (newUser_id !== null && status !== oldStatus) {
-         await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/chore/assignment/status`, {
+         await fetch(`https://hooshome-api-518521047014.us-east4.run.app/chore/assignment/status`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ chore_id: currentChoreId, user_id: newUser_id, status: status }),
