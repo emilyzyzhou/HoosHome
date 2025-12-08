@@ -9,7 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ListChecks, Trash2, Plus, Loader2, Repeat, Calendar, AlignLeft, User, CheckCircle, Edit, Search, AlertCircle, RefreshCw, Filter, ArrowUpDown} from "lucide-react";
 import { CreateChoreModal } from "@/components/create-chore-modal";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE || ''; 
+const API_BASE_URL = 'https://hooshome-api-518521047014.us-east4.run.app'; 
 
 interface Chore {
     chore_id: number;

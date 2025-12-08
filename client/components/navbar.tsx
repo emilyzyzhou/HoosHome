@@ -16,7 +16,7 @@ export function Navbar() {
     // Check if user is authenticated by calling /auth/me endpoint
     const checkAuthAndHome = async () => {
       try {
-        const authRes = await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/auth/me`, {
+        const authRes = await fetch(`https://hooshome-api-518521047014.us-east4.run.app/auth/me`, {
           credentials: "include",
         })
 
@@ -25,7 +25,7 @@ export function Navbar() {
 
           // fetch Home ID via roommates endpoint
           try {
-            const homeRes = await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/home/roommates`, {
+            const homeRes = await fetch(`https://hooshome-api-518521047014.us-east4.run.app/home/roommates`, {
               credentials: "include",
             })
             
@@ -56,7 +56,7 @@ export function Navbar() {
 
   const handleLogout = async () => {
     try {
-      await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/auth/logout`, {
+      await fetch(`https://hooshome-api-518521047014.us-east4.run.app/auth/logout`, {
         method: "POST",
         credentials: "include",
       })
