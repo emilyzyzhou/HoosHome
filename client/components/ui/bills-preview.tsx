@@ -1,4 +1,15 @@
-export default function BillsPreview({ bills }) {
+interface Bill {
+  bill_id: number;
+  description: string;
+  amount_due: number;
+  status: string;
+}
+
+interface BillsPreviewProps {
+  bills: Bill[];
+}
+
+export default function BillsPreview({ bills }: BillsPreviewProps) {
   return (
     <div className="border rounded-lg p-4 shadow-sm">
       <h2 className="text-xl font-bold mb-2">Bills</h2>

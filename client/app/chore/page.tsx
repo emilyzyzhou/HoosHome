@@ -1,11 +1,12 @@
 // app/chore/page.tsx
 "use client"
 
+import { Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { ChorePage } from "@/components/chores-page";
 import { AlertCircle } from 'lucide-react';
 
-export default function ChoreBoardPage() {
+function ChorePageContent() {
     const searchParams = useSearchParams();
     const homeIdParam = searchParams.get('homeId');
 
@@ -22,4 +23,16 @@ export default function ChoreBoardPage() {
     }
 
     return <ChorePage homeId={homeId} />;
+}
+
+export default function ChoreBoardPage() {
+    return (
+        <Suspense fallback={
+            <div className="min-h-screen flex items-center justify-center">
+                <div className="text-muted-foreground">Loading...</div>
+            </div>
+        }>
+            <ChorePageContent />
+        </Suspense>
+    );
 }
