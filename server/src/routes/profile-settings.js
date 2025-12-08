@@ -34,23 +34,24 @@ router.get("/get-info", async (req, res) => {
   }
 });
 
-// note that THIS DOESN'T HANDLE PASSWORD OR pfp link (if we do that) because I think those should be separate
+// note that THIS DOESN'T HANDLE PASSWORD I think it should be separate
 router.post("/update-info", async (req, res) => {
   const token = req.cookies?.[TOKEN_COOKIE];
   const payload = jwt.verify(token, process.env.JWT_SECRET);
   const userID = payload.user_id;
 
-  const { name, email, phoneNumber, paymentMethod, paymentHandle } = req.body || {};
+  const { name, email, phoneNumber, paymentMethod, paymentHandle, socialLink } = req.body || {};
   try {
-    // need to grab the hash & pfp link first to feed those back in since this func doesn't deal with those
-    const [user] = await getUserByID(userID);
+    // Convert empty strings to null for ENUM columns
+    const cleanPaymentMethod = paymentMethod && paymentMethod.trim() !== '' ? paymentMethod : null;
+    const cleanPaymentHandle = paymentHandle && paymentHandle.trim() !== '' ? paymentHandle : null;
     
     // Update with new payment info
     await pool.query(
       `UPDATE Users 
-       SET name = ?, email = ?, phone_number = ?, payment_method = ?, payment_handle = ?
+       SET name = ?, email = ?, phone_number = ?, payment_method = ?, payment_handle = ?, profile_link = ?
        WHERE user_id = ?`,
-      [name, email, phoneNumber, paymentMethod, paymentHandle, userID]
+      [name, email, phoneNumber || null, cleanPaymentMethod, cleanPaymentHandle, socialLink || null, userID]
     );
     
     return res.json({ success: true, message: "User info updated successfully." });
