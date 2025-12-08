@@ -134,7 +134,7 @@ router.get("/roommates", async (req, res) => {
 
     if (userHome.length === 0) {
       // User not in any home yet → no roommates
-      return res.json({ roommates: [] });
+      return res.json({ roommates: [], homeId: null });
     }
 
     const homeId = userHome[0].home_id;
@@ -142,7 +142,7 @@ router.get("/roommates", async (req, res) => {
     // Get all users in the same home
     const roommates = await getAllUsersInHome(homeId);
 
-    return res.json({ roommates });
+    return res.json({ roommates, homeId });
   } catch (error) {
     console.error("Roommates fetch error:", error);
     return res
