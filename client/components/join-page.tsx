@@ -36,7 +36,7 @@ export default function JoinPage({ onHomeJoined }: JoinPageProps) {
     }
 
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/home/join`, {
+      const response = await fetch(`https://hooshome-api-518521047014.us-east4.run.app/home/join`, {
         method: 'POST', 
         credentials: "include",
         headers: { 'Content-Type': 'application/json' },
@@ -79,7 +79,7 @@ export default function JoinPage({ onHomeJoined }: JoinPageProps) {
     }
 
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/home/create-home`, {
+      const response = await fetch(`https://hooshome-api-518521047014.us-east4.run.app/home/create-home`, {
         method: 'POST',
         credentials: "include",
         headers: { 'Content-Type': 'application/json' },

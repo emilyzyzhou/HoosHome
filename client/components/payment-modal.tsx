@@ -47,7 +47,7 @@ const PaymentModal = ({ isOpen, onClose, billId, billName, amount, onSuccess }: 
 
   const fetchPayerInfo = async () => {
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/bills/${billId}/payer-info`, {
+      const res = await fetch(`https://hooshome-api-518521047014.us-east4.run.app/bills/${billId}/payer-info`, {
         credentials: "include",
       });
 
@@ -71,7 +71,7 @@ const PaymentModal = ({ isOpen, onClose, billId, billName, amount, onSuccess }: 
   const handleUpdateStatus = async () => {
     setLoading(true);
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/bills/${billId}/update-payment-status`, {
+      const res = await fetch(`https://hooshome-api-518521047014.us-east4.run.app/bills/${billId}/update-payment-status`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         credentials: "include",

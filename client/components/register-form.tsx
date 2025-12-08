@@ -46,7 +46,7 @@ export function RegisterForm({ onRegisterSuccess }: RegisterFormProps) {
 
     try {
       setIsLoading(true)
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/auth/register`, {
+      const res = await fetch(`https://hooshome-api-518521047014.us-east4.run.app/auth/register`, {
         method: "POST",
         credentials: "include",
         headers: { "Content-Type": "application/json" },

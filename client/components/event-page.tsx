@@ -51,7 +51,7 @@ export default function EventPage() {
     setError("");
     try {
         const res = await fetch(
-            `${process.env.NEXT_PUBLIC_API_BASE}/events/user`,
+            `https://hooshome-api-518521047014.us-east4.run.app/events/user`,
             {
             method: "GET",
             credentials: "include",
@@ -78,7 +78,7 @@ export default function EventPage() {
 
   const fetchRoommates = async () => {
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/home/roommates`, {
+      const res = await fetch(`https://hooshome-api-518521047014.us-east4.run.app/home/roommates`, {
         credentials: "include",
       })
       if (res.ok) {
@@ -92,7 +92,7 @@ export default function EventPage() {
 
   const fetchUserInfo = async () => {
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/auth/me`, { credentials: "include" })
+      const res = await fetch(`https://hooshome-api-518521047014.us-east4.run.app/auth/me`, { credentials: "include" })
       if (res.ok) {
         const data = await res.json()
         setCurrentUserId(data.user.user_id)
@@ -128,7 +128,7 @@ export default function EventPage() {
       if (!eventInvitees.has(eventId)) {
         try {
           const res = await fetch(
-            `${process.env.NEXT_PUBLIC_API_BASE}/events/get-rsvp-statuses?event_id=${eventId}`,
+            `https://hooshome-api-518521047014.us-east4.run.app/events/get-rsvp-statuses?event_id=${eventId}`,
             { credentials: "include" }
           )
           if (res.ok) {
@@ -155,7 +155,7 @@ export default function EventPage() {
 
     try {
         const res = await fetch(
-            `${process.env.NEXT_PUBLIC_API_BASE}/events/create`,
+            `https://hooshome-api-518521047014.us-east4.run.app/events/create`,
             {
                 method: "POST",
                 credentials: "include",
@@ -185,7 +185,7 @@ export default function EventPage() {
   const handleDelete = async (eventId: number) => {
     try {
         await fetch(
-            `${process.env.NEXT_PUBLIC_API_BASE}/events/delete`,
+            `https://hooshome-api-518521047014.us-east4.run.app/events/delete`,
             {
             method: "POST",
             credentials: "include",
@@ -211,7 +211,7 @@ export default function EventPage() {
 
     try {
         await fetch(
-            `${process.env.NEXT_PUBLIC_API_BASE}/events/update`,
+            `https://hooshome-api-518521047014.us-east4.run.app/events/update`,
             {
                 method: "POST",
                 credentials: "include",
@@ -242,7 +242,7 @@ export default function EventPage() {
   const handleRsvp = async (eventId: number, rsvp: string) => {
     try {
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_BASE}/events/rsvp`,
+        `https://hooshome-api-518521047014.us-east4.run.app/events/rsvp`,
         {
         method: "POST",
         credentials: "include",

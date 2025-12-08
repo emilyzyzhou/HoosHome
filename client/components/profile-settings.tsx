@@ -90,7 +90,7 @@ function AccountDetails() {
         setIsLoading(true);
 
         const res = await fetch(
-          `${process.env.NEXT_PUBLIC_API_BASE}/profile-settings/get-info`,
+          `https://hooshome-api-518521047014.us-east4.run.app/profile-settings/get-info`,
           {
             method: "GET",
             credentials: "include",
@@ -173,7 +173,7 @@ function AccountDetails() {
 
     try {
       setIsLoading(true);
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/profile-settings/update-info`, {
+      const res = await fetch(`https://hooshome-api-518521047014.us-east4.run.app/profile-settings/update-info`, {
         method: "POST",
         credentials: "include",
         headers: { "Content-Type": "application/json" },
@@ -383,7 +383,7 @@ function PasswordTab() {
         return;
       }
       setIsLoading(true);
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/profile-settings/update-password`, {
+      const res = await fetch(`https://hooshome-api-518521047014.us-east4.run.app/profile-settings/update-password`, {
         method: "POST",
         credentials: "include",
         headers: { "Content-Type": "application/json" },
@@ -517,7 +517,7 @@ function EmergencyTab() {
         setIsLoading(true);
 
         const res = await fetch(
-          `${process.env.NEXT_PUBLIC_API_BASE}/profile-settings/get-emergency-contact`,
+          `https://hooshome-api-518521047014.us-east4.run.app/profile-settings/get-emergency-contact`,
           {
             method: "GET",
             credentials: "include",
@@ -580,7 +580,7 @@ function EmergencyTab() {
     try {
       setError("");
       setIsLoading(true);
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/profile-settings/add-emergency-contact`, {
+      const res = await fetch(`https://hooshome-api-518521047014.us-east4.run.app/profile-settings/add-emergency-contact`, {
         method: "POST",
         credentials: "include",
         headers: { "Content-Type": "application/json" },
@@ -613,7 +613,7 @@ function EmergencyTab() {
     try {
       setError("");
       setIsLoading(true);
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/profile-settings/delete-emergency-contact`, {
+      const res = await fetch(`https://hooshome-api-518521047014.us-east4.run.app/profile-settings/delete-emergency-contact`, {
         method: "POST",
         credentials: "include",
         headers: { "Content-Type": "application/json" },

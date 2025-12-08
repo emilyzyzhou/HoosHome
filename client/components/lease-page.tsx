@@ -40,7 +40,7 @@ export function LeasePageComponent({ homeId }: LeasePageProps) {
   const fetchLease = async () => {
     setIsLoading(true)
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/lease/${homeId}`)
+      const res = await fetch(`https://hooshome-api-518521047014.us-east4.run.app/lease/${homeId}`)
       const data = await res.json()
       
       if (res.ok && data.success) {
@@ -73,7 +73,7 @@ export function LeasePageComponent({ homeId }: LeasePageProps) {
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault()
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/lease/${homeId}`, {
+      const res = await fetch(`https://hooshome-api-518521047014.us-east4.run.app/lease/${homeId}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData)
