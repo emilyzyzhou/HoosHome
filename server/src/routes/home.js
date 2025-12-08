@@ -2,14 +2,16 @@ import { Router } from "express";
 import { pool } from "../db/pool.js";
 import { getBillsForUser } from "../db/bill_share_sql.js";
 import { getBillByHome } from "../db/bill_sql.js";
-import { getAllHomesForUser, getAllUsersInHome } from "../db/home_membership_sql.js";
+import {
+  getAllHomesForUser,
+  getAllUsersInHome,
+  addUserToHome
+} from "../db/home_membership_sql.js";
 import { getEventsByHomeID } from "../db/event_sql.js";
 import { getChoresForHome } from "../db/chore_assignment_sql.js";
 import { getLeaseByHomeID } from "../db/lease_sql.js";
 import jwt from "jsonwebtoken";
-import { getHomeByJoinCode } from "../db/home_sql.js";
-import { addUserToHome, getAllHomesForUser, getAllUsersInHome } from "../db/home_membership_sql.js";
-import { addHome } from "../db/home_sql.js";
+import { getHomeByJoinCode, addHome } from "../db/home_sql.js";
 
 function getUserIdFromRequest(req) {
   const token = req.cookies?.hh_token;
