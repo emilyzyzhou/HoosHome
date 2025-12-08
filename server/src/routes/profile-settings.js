@@ -42,13 +42,16 @@ router.post("/update-info", async (req, res) => {
 
   const { name, email, phoneNumber, paymentMethod, paymentHandle, socialLink } = req.body || {};
   try {
+    // Convert empty strings to null for ENUM columns
+    const cleanPaymentMethod = paymentMethod && paymentMethod.trim() !== '' ? paymentMethod : null;
+    const cleanPaymentHandle = paymentHandle && paymentHandle.trim() !== '' ? paymentHandle : null;
     
     // Update with new payment info
     await pool.query(
       `UPDATE Users 
        SET name = ?, email = ?, phone_number = ?, payment_method = ?, payment_handle = ?, profile_link = ?
        WHERE user_id = ?`,
-      [name, email, phoneNumber, paymentMethod, paymentHandle, socialLink, userID]
+      [name, email, phoneNumber || null, cleanPaymentMethod, cleanPaymentHandle, socialLink || null, userID]
     );
     
     return res.json({ success: true, message: "User info updated successfully." });
