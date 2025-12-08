@@ -108,7 +108,7 @@ export default function LandingPage() {
               <Card className="border-orange-100 dark:border-blue-800 hover:shadow-lg transition-shadow">
                 <CardHeader>
                   <div className="w-12 h-12 bg-gradient-to-br from-orange-500 to-amber-600 rounded-lg flex items-center justify-center mb-4">
-                    <Home className="w-6 h-6 text-white" />
+                    <img src="/logo.png" alt="HoosHome" className="w-6 h-6" />
                   </div>
                   <CardTitle className="text-blue-900 dark:text-orange-200">Lease Management</CardTitle>
                 </CardHeader>

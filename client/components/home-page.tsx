@@ -33,52 +33,55 @@ export default function HomePage() {
   }, []);
 
   return (
-    <div className="min-h-screen flex flex-col 
-      bg-gradient-to-br from-orange-50 via-amber-50 to-orange-100
-      dark:from-slate-950 dark:via-blue-950 dark:to-slate-900"
-    >
-      {}
+    <div className="min-h-screen flex flex-col">
       <Navbar />
 
-      {}
-      <main className="flex-1 container mx-auto px-4 py-8">
-        {error && (
-          <div className="p-6 text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 rounded-lg">
-            Failed to load dashboard data.
-          </div>
-        )}
+      {/* Banner with background image */}
+      <div 
+        className="relative bg-cover bg-center py-16"
+        style={{ 
+          backgroundImage: 'url(/lawnbg.jpg)',
+        }}
+      >
+        {/* Dark overlay for text visibility */}
+        <div className="absolute inset-0 bg-black/50"></div>
+        
+        {/* Banner content */}
+        <div className="relative container mx-auto px-4">
+          {error && (
+            <div className="p-6 text-red-100 bg-red-900/80 rounded-lg backdrop-blur-sm border border-red-700">
+              Failed to load dashboard data.
+            </div>
+          )}
 
-        {!data && !error && (
-          <div className="p-6 text-gray-500 dark:text-gray-300">
-            Loading dashboard…
-          </div>
-        )}
+          {!data && !error && (
+            <div className="p-6 text-white">
+              Loading dashboard…
+            </div>
+          )}
 
-        {data && (
-          <>
-            <div className="flex justify-between items-start mb-6">
-              <h1 className="text-4xl font-bold leading-normal
-                bg-gradient-to-r from-blue-900 to-orange-600 
-                dark:from-orange-300 dark:to-amber-300 
-                bg-clip-text text-transparent"
-              >
+          {data && (
+            <div className="flex justify-between items-start">
+              <h1 className="text-5xl font-bold text-white drop-shadow-lg">
                 My Home
               </h1>
               
-              <div className="bg-white dark:bg-slate-800 border-2 border-orange-400 dark:border-amber-400 rounded-lg px-4 py-2 shadow-md">
+              <div className="bg-white/95 dark:bg-slate-800/95 backdrop-blur-sm border-2 border-orange-400 dark:border-amber-400 rounded-lg px-4 py-2 shadow-xl">
                 <p className="text-sm text-gray-600 dark:text-gray-300 font-medium">Join Code</p>
                 <p className="text-2xl font-bold text-orange-600 dark:text-amber-400 font-mono tracking-wider">
                   {data.join_code}
                 </p>
               </div>
             </div>
+          )}
+        </div>
+      </div>
 
-            <Dashboard data={data} />
-          </>
-        )}
+      {/* Main content area */}
+      <main className="flex-1 container mx-auto px-4 py-8 bg-gradient-to-br from-orange-50 via-amber-50 to-orange-100 dark:from-slate-950 dark:via-blue-950 dark:to-slate-900">
+        {data && <Dashboard data={data} />}
       </main>
 
-      {}
       <Footer />
     </div>
   );

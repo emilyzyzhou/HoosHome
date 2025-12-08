@@ -10,7 +10,7 @@ export function Footer() {
           <div className="space-y-3">
             <div className="flex items-center gap-2">
               <div className="bg-gradient-to-br from-orange-500 to-amber-600 p-2 rounded-lg shadow-md">
-                <Home className="w-4 h-4 text-white" />
+                <img src="/logo.png" alt="HoosHome" className="w-4 h-4" />
               </div>
               <span className="text-lg font-bold bg-gradient-to-r from-blue-900 to-orange-600 dark:from-orange-300 dark:to-amber-300 bg-clip-text text-transparent">
                 HoosHome?

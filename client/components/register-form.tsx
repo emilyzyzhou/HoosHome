@@ -92,7 +92,7 @@ export function RegisterForm({ onRegisterSuccess }: RegisterFormProps) {
         <CardHeader className="space-y-2 text-center bg-gradient-to-b from-orange-50 to-transparent dark:from-blue-900/20 dark:to-transparent pb-6">
           <div className="flex justify-center mb-4">
             <div className="bg-gradient-to-br from-orange-500 to-amber-600 p-3 rounded-lg shadow-lg">
-              <Home className="w-8 h-8 text-white" />
+              <img src="/logo.png" alt="HoosHome" className="w-8 h-8" />
             </div>
           </div>
           <CardTitle className="text-3xl font-bold bg-gradient-to-r from-blue-900 to-orange-600 dark:from-orange-300 dark:to-amber-300 bg-clip-text text-transparent">
