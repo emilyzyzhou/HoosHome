@@ -46,9 +46,9 @@ router.post("/join", async (req, res) => {
     // Insert or ensure membership for this user in this home
     await addUserToHome(home[0].home_id, userId, today, null);
 
-    console.log("User joined home:", { userId, homeId: home.id });
+    console.log("User joined home:", { userId, homeId: home[0].home_id });
 
-    return res.json({ success: true, home_id: home.id });
+    return res.json({ success: true, home_id: home[0].home_id });
   } catch (error) {
     console.error("Home Join Error:", error);
   }
