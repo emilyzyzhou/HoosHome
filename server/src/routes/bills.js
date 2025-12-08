@@ -442,4 +442,68 @@ router.delete("/:billId", requireAuth, async (req, res) => {
   }
 });
 
+// GET /bills/:billId/payer-info - Get payment info for bill payer
+router.get("/:billId/payer-info", requireAuth, async (req, res) => {
+  try {
+    const { billId } = req.params;
+    const userId = req.user.user_id;
+
+    // Verify the current user is part of this bill
+    const [billShareCheck] = await pool.query(
+      "SELECT user_id FROM BillShare WHERE bill_id = ? AND user_id = ?",
+      [billId, userId]
+    );
+
+    if (billShareCheck.length === 0) {
+      return res.status(403).json({ error: "Not authorized to view this bill" });
+    }
+
+    // Get payer info
+    const [payerInfo] = await pool.query(
+      `SELECT u.user_id, u.name, u.payment_method, u.payment_handle
+       FROM Bill b
+       JOIN Users u ON b.payer_user_id = u.user_id
+       WHERE b.bill_id = ?`,
+      [billId]
+    );
+
+    if (payerInfo.length === 0) {
+      return res.status(404).json({ error: "Bill not found" });
+    }
+
+    res.json({ payer: payerInfo[0] });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+// PUT /bills/:billId/update-payment-status - Update payment status for current user's share
+router.put("/:billId/update-payment-status", requireAuth, async (req, res) => {
+  try {
+    const { billId } = req.params;
+    const userId = req.user.user_id;
+    const { status } = req.body;
+
+    if (!status || !['paid', 'unpaid'].includes(status)) {
+      return res.status(400).json({ error: "Invalid status. Must be 'paid' or 'unpaid'" });
+    }
+
+    // Update the bill share status for this user
+    const [result] = await pool.query(
+      "UPDATE BillShare SET status = ? WHERE bill_id = ? AND user_id = ?",
+      [status, billId, userId]
+    );
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ error: "Bill share not found" });
+    }
+
+    res.json({ success: true, message: "Payment status updated" });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
 export default router;

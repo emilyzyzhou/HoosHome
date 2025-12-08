@@ -6,8 +6,9 @@ import { Footer } from "@/components/footer"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { DollarSign, Search, Filter, Plus, ChevronDown, ChevronRight, Pencil, Trash2, AlertCircle, RefreshCw, Calendar, CheckCircle, ArrowUpDown, User, Edit } from "lucide-react"
+import { DollarSign, Search, Filter, Plus, ChevronDown, ChevronRight, Pencil, Trash2, AlertCircle, RefreshCw, Calendar, CheckCircle, ArrowUpDown, User, Edit, CreditCard } from "lucide-react"
 import { CreateBillModal } from "@/components/create-bill-modal"
+import PaymentModal from "@/components/payment-modal"
 
 interface BillShare {
   bill_id: number
@@ -45,6 +46,8 @@ export function BillsPage() {
   const [expandedBills, setExpandedBills] = useState<Set<number>>(new Set())
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
   const [editingBill, setEditingBill] = useState<Bill | null>(null)
+  const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false)
+  const [paymentBill, setPaymentBill] = useState<Bill | null>(null)
 
   useEffect(() => {
     fetchBills()
@@ -257,18 +260,19 @@ export function BillsPage() {
                     <th className="text-right p-4 text-sm font-semibold text-blue-900 dark:text-orange-200">Total Amount</th>
                     <th className="text-right p-4 text-sm font-semibold text-blue-900 dark:text-orange-200">You Owe</th>
                     <th className="text-center p-4 text-sm font-semibold text-blue-900 dark:text-orange-200">Status</th>
+                    <th className="text-center p-4 text-sm font-semibold text-blue-900 dark:text-orange-200">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
                   {isLoading ? (
                     <tr>
-                      <td colSpan={6} className="text-center p-8 text-muted-foreground">
+                      <td colSpan={7} className="text-center p-8 text-muted-foreground">
                         Loading bills...
                       </td>
                     </tr>
                   ) : filteredOutstanding.length === 0 ? (
                     <tr>
-                      <td colSpan={6} className="text-center p-8 text-muted-foreground">
+                      <td colSpan={7} className="text-center p-8 text-muted-foreground">
                         No bills found
                       </td>
                     </tr>
@@ -294,6 +298,22 @@ export function BillsPage() {
                             {bill.payment_status === "paid" && <CheckCircle className="w-3 h-3" />}
                             {bill.payment_status || "unpaid"}
                           </span>
+                        </td>
+                        <td className="text-center p-4">
+                          {bill.payment_status !== "paid" && (
+                            <Button
+                              onClick={() => {
+                                setPaymentBill(bill)
+                                setIsPaymentModalOpen(true)
+                              }}
+                              variant="ghost"
+                              size="sm"
+                              className="text-orange-600 hover:text-orange-700 hover:bg-orange-100 dark:text-orange-400 dark:hover:text-orange-300 dark:hover:bg-orange-900/20"
+                              title="Pay Bill"
+                            >
+                              <CreditCard className="w-4 h-4" />
+                            </Button>
+                          )}
                         </td>
                       </tr>
                     ))
@@ -467,6 +487,23 @@ export function BillsPage() {
           onSuccess={() => {
             setIsCreateModalOpen(false)
             setEditingBill(null)
+            fetchBills()
+          }}
+        />
+      )}
+
+      {/* Payment Modal */}
+      {isPaymentModalOpen && paymentBill && (
+        <PaymentModal
+          isOpen={isPaymentModalOpen}
+          onClose={() => {
+            setIsPaymentModalOpen(false)
+            setPaymentBill(null)
+          }}
+          billId={paymentBill.bill_id}
+          billName={paymentBill.description}
+          amount={Number(paymentBill.amount_owed) || 0}
+          onSuccess={() => {
             fetchBills()
           }}
         />
