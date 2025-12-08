@@ -21,39 +21,39 @@ export default function BillsPreview({ bills }: Props) {
   }
 
   return (
-    <div className="border rounded-lg p-4 shadow-sm">
-    <h2 className="text-xl font-bold mb-2">
+    <div className="bg-white dark:bg-slate-800 border-2 border-orange-200 dark:border-slate-700 rounded-lg p-6 shadow-lg hover:shadow-xl transition-shadow">
+    <h2 className="text-2xl font-bold mb-4">
     <Link
         href="/bills"
-        className="hover:underline text-blue-700 dark:text-amber-200"
+        className="hover:underline bg-gradient-to-r from-blue-700 to-orange-600 dark:from-orange-300 dark:to-amber-300 bg-clip-text text-transparent"
     >
         Bills
     </Link>
     </h2>
 
       {sorted.length === 0 ? (
-        <p className="text-gray-500">No upcoming bills.</p>
+        <p className="text-gray-500 dark:text-gray-400">No upcoming bills.</p>
       ) : (
-        <ul className="space-y-2">
+        <ul className="space-y-3">
           {sorted.map((b) => {
             const days = daysUntil(b.due_date);
 
-            let color = "text-green-600";
-            if (days < 3) color = "text-red-600";
-            else if (days < 7) color = "text-yellow-600";
+            let color = "text-green-600 dark:text-green-400";
+            if (days < 3) color = "text-red-600 dark:text-red-400";
+            else if (days < 7) color = "text-yellow-600 dark:text-yellow-400";
 
             return (
-              <li key={b.bill_id} className="text-gray-800">
-                <span className="font-medium">{b.description}</span>
-                {" — $"}
-                {b.total_amount}
+              <li key={b.bill_id} className="text-gray-800 dark:text-gray-200 border-b border-gray-200 dark:border-gray-700 pb-3 last:border-0">
+                <span className="font-medium text-lg">{b.description}</span>
+                {" — "}
+                <span className="font-semibold text-orange-600 dark:text-amber-400">${b.total_amount}</span>
 
-                <div className="text-sm text-gray-600">
+                <div className="text-sm text-gray-600 dark:text-gray-400 mt-1">
                   Type: {b.bill_type} · Due: {b.due_date} · Payer: User{" "}
                   {b.payer_user_id}
                 </div>
 
-                <div className={`text-sm font-semibold ${color}`}>
+                <div className={`text-sm font-semibold ${color} mt-1`}>
                   Due in {days} day{days === 1 ? "" : "s"}
                 </div>
               </li>
