@@ -46,11 +46,24 @@ export default function BillsPreview({ bills }: Props) {
               <li key={b.bill_id} className="text-gray-800 dark:text-gray-200 border-b border-gray-200 dark:border-gray-700 pb-3 last:border-0">
                 <span className="font-medium text-lg">{b.description}</span>
                 {" — "}
-                <span className="font-semibold text-orange-600 dark:text-amber-400">${b.total_amount}</span>
+                <span className="font-semibold text-orange-600 dark:text-amber-400">
+                  Your share: ${b.user_amount_due || b.total_amount}
+                </span>
+                {b.user_amount_due && b.user_amount_due !== b.total_amount && (
+                  <span className="text-sm text-gray-500 dark:text-gray-400">
+                    {" "}(Total: ${b.total_amount})
+                  </span>
+                )}
 
                 <div className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                  Type: {b.bill_type} · Due: {b.due_date} · Payer: User{" "}
-                  {b.payer_user_id}
+                  Type: {b.bill_type} · Due: {b.due_date}
+                  {b.user_payment_status && (
+                    <> · Status: <span className={`font-medium ${
+                      b.user_payment_status === 'paid' ? 'text-green-600 dark:text-green-400' : 
+                      b.user_payment_status === 'partial' ? 'text-yellow-600 dark:text-yellow-400' :
+                      'text-red-600 dark:text-red-400'
+                    }`}>{b.user_payment_status}</span></>
+                  )}
                 </div>
 
                 <div className={`text-sm font-semibold ${color} mt-1`}>

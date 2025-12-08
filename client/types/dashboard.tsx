@@ -11,6 +11,8 @@ export interface Bill {
   total_amount: number;
   due_date: string;
   payer_user_id: number;
+  user_amount_due?: number;
+  user_payment_status?: string;
 }
 
 

@@ -1,13 +1,71 @@
+# Git files
 .git
 .gitignore
+
+# Dependencies - node_modules will be installed during build
 node_modules
-npm-debug.log
-yarn.lock
-package-lock.json
+
+# Build outputs - these are generated during deployment
+.next
 dist
 build
-.next
+out
+
+# Logs
+npm-debug.log
+yarn-error.log
+*.log
+
+# Lock files - only package.json is needed
+yarn.lock
+package-lock.json
+
+# Testing
 coverage
-.DS_Store
+*.test.js
+*.test.ts
+*.test.tsx
+*.spec.js
+*.spec.ts
+*.spec.tsx
+__tests__/
+__mocks__/
+jest.config.*
+cypress/
+.nyc_output
+
+# Environment files
 .env
 .env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE files
+.vscode
+.idea
+*.swp
+*.swo
+*~
+.project
+.classpath
+.settings/
+
+# Documentation that's not needed for build
+README.md
+CHANGELOG.md
+LICENSE
+docs/
+
+# Other unnecessary files
+*.md
+.prettierrc
+.eslintrc
+.eslintrc.js
+.eslintrc.json
+.editorconfig
+.husky/

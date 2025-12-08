@@ -153,11 +153,9 @@ router.get("/roommates", async (req, res) => {
     const homeId = homes[0].home_id;
     const joinCode = homes[0].join_code;
 
-    const [roommates, ignoredBills, events, rawChores, leaseArray] = await Promise.all([
+    const [roommates, events, leaseArray] = await Promise.all([
       getAllUsersInHome(homeId),
-      getBillsForUser(userID),   // still called but ignored
       getEventsByHomeID(homeId),
-      getChoresForHome(homeId),
       getLeaseByHomeID(homeId),
     ]);
 
@@ -170,10 +168,21 @@ router.get("/roommates", async (req, res) => {
       const sevenDaysAgo = new Date(now);
       sevenDaysAgo.setDate(now.getDate() - 7);
 
+      // Filter events where user is invited or is creator
+      const [userEventInvites] = await pool.query(
+        "SELECT event_id FROM EventInvite WHERE user_id = ?",
+        [userID]
+      );
+      
+      const userEventIds = new Set(userEventInvites.map(ei => ei.event_id));
+      const userEvents = events.filter(e => 
+        userEventIds.has(e.event_id) || e.created_by_user_id === userID
+      );
+
       const upcoming = [];
       const past = [];
 
-      for (const e of events) {
+      for (const e of userEvents) {
         const start = new Date(e.event_start);
         const end = e.event_end ? new Date(e.event_end) : null;
 
@@ -233,8 +242,15 @@ router.get("/roommates", async (req, res) => {
       };
     }
 
-    // Normalize chore data including assignee names and formatted dates
+    // Normalize chore data - only chores assigned to this user
     const chores = [];
+
+    const [rawChores] = await pool.query(
+      `SELECT ca.chore_id, ca.user_id, ca.status 
+       FROM ChoreAssignment ca 
+       WHERE ca.user_id = ?`,
+      [userID]
+    );
 
     if (rawChores.length > 0) {
       for (const c of rawChores) {
@@ -245,14 +261,12 @@ router.get("/roommates", async (req, res) => {
 
         const full = choreFullRows[0];
 
-        let assigneeName = null;
-        if (c.user_id) {
-          const [userRows] = await pool.query(
-            "SELECT name FROM Users WHERE user_id = ?",
-            [c.user_id]
-          );
-          assigneeName = userRows.length > 0 ? userRows[0].name : null;
-        }
+        // User is already the assignee since we filtered by user_id
+        const [userRows] = await pool.query(
+          "SELECT name FROM Users WHERE user_id = ?",
+          [c.user_id]
+        );
+        const assigneeName = userRows.length > 0 ? userRows[0].name : null;
 
         chores.push({
           chore_id: c.chore_id,
@@ -266,19 +280,30 @@ router.get("/roommates", async (req, res) => {
       }
     }
 
-    const allBills = await getBillByHome(homeId);
+    // Get bills where user has a share (BillShare entry)
+    const [userBillShares] = await pool.query(
+      `SELECT bs.bill_id, bs.amount_due, bs.status, b.description, b.bill_type, 
+              b.total_amount, b.due_date, b.payer_user_id
+       FROM BillShare bs
+       JOIN Bill b ON bs.bill_id = b.bill_id
+       WHERE bs.user_id = ? AND b.home_id = ?`,
+      [userID, homeId]
+    );
+
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    const upcomingBills = allBills.filter(b => new Date(b.due_date) >= today);
+    const upcomingBillShares = userBillShares.filter(b => new Date(b.due_date) >= today);
 
-    const bills = upcomingBills.map(b => ({
+    const bills = upcomingBillShares.map(b => ({
       bill_id: b.bill_id,
       description: b.description,
       bill_type: b.bill_type,
       total_amount: b.total_amount,
       due_date: b.due_date.toISOString().split("T")[0],
       payer_user_id: b.payer_user_id,
+      user_amount_due: b.amount_due,
+      user_payment_status: b.status,
     }));
 
   return res.json({
