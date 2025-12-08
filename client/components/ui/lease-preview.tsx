@@ -9,13 +9,11 @@ export default function LeasePreview({ lease }: Props) {
   return (
     <div className="border rounded-lg p-4 shadow-sm">
       <h2 className="text-xl font-bold mb-2">
-        <Link
-          href="/lease"
-          className="hover:underline text-blue-700 dark:text-amber-200"
-        >
+        <span className="text-blue-700 dark:text-amber-200">
           Lease
-        </Link>
+        </span>
       </h2>
+
 
       {!lease ? (
         <p className="text-gray-500">No lease found.</p>
