@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import Link from "next/link"
 import { useRouter, usePathname } from "next/navigation"
-import { Home, LogOut } from "lucide-react"
+import { Home, LogOut} from "lucide-react"
 
 export function Navbar() {
   const router = useRouter()
@@ -31,7 +31,6 @@ export function Navbar() {
             
             if (homeRes.ok) {
               const homeData = await homeRes.json()
-              // Check if we have roommates (user is always a roommate in their own home)
               if (homeData.homeId) {
                 console.log("Setting Home ID:", homeData.homeId)
                 setHomeId(homeData.homeId)
@@ -86,7 +85,6 @@ export function Navbar() {
         <div className="flex items-center gap-4">
           {!isLoading && (
             isLoggedIn ? (
-              // Logged in: show join and logout
               <>
                 <Link
                   href="/home"
@@ -106,6 +104,13 @@ export function Navbar() {
                 >
                   Chores
                 </Link>
+                {/* NEW LEASE LINK */}
+                <Link
+                      href={`/lease?homeId=${homeId}`}
+                      className="inline-flex items-center justify-center rounded-md text-sm font-semibold transition-colors bg-gradient-to-r from-blue-900 to-blue-800 hover:from-blue-800 hover:to-blue-700 text-white shadow-lg h-9 px-4"
+                    >
+                    Lease 
+                  </Link>
                 <Link
                   href="/bills"
                   className="inline-flex items-center justify-center rounded-md text-sm font-semibold transition-colors bg-gradient-to-r from-blue-900 to-blue-800 hover:from-blue-800 hover:to-blue-700 text-white shadow-lg h-9 px-4"
@@ -113,18 +118,11 @@ export function Navbar() {
                   Bills
                 </Link>
                 <Link
-                  href="/events"
-                  className="inline-flex items-center justify-center rounded-md text-sm font-semibold transition-colors bg-gradient-to-r from-blue-900 to-blue-800 hover:from-blue-800 hover:to-blue-700 text-white shadow-lg h-9 px-4"
-                >
-                  Events
-                </Link>
-                <Link
                   href="/profile-settings"
                   className="inline-flex items-center justify-center rounded-md text-sm font-semibold transition-colors bg-gradient-to-r from-blue-900 to-blue-800 hover:from-blue-800 hover:to-blue-700 text-white shadow-lg h-9 px-4"
                 >
                   My Profile
                 </Link>
-                
                 
                 <button
                   onClick={handleLogout}
@@ -135,7 +133,6 @@ export function Navbar() {
                 </button>
               </>
             ) : (
-              // Not logged in: show login and get started
               <>
                 <Link 
                   href="/login"
