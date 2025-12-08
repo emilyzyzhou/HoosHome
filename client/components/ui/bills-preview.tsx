@@ -1,4 +1,5 @@
 import { Bill } from "@/types/dashboard";
+import Link from "next/link";
 
 interface Props {
   bills: Bill[] | undefined;
@@ -21,7 +22,14 @@ export default function BillsPreview({ bills }: Props) {
 
   return (
     <div className="border rounded-lg p-4 shadow-sm">
-      <h2 className="text-xl font-bold mb-2">Bills</h2>
+    <h2 className="text-xl font-bold mb-2">
+    <Link
+        href="/bills"
+        className="hover:underline text-blue-700 dark:text-amber-200"
+    >
+        Bills
+    </Link>
+    </h2>
 
       {sorted.length === 0 ? (
         <p className="text-gray-500">No upcoming bills.</p>

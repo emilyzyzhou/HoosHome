@@ -72,11 +72,13 @@ export interface Chore {
 }
 
 export interface Lease {
+  lease_id?: number;
   landlord_name: string;
   start_date: string;
   end_date: string;
   rent_amount: number;
 }
+
 
 interface DashboardData {
   roommates: Roommate[];
