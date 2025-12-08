@@ -21,18 +21,18 @@ export async function getUserByEmail(email) {
     return result;
 }
 
-export async function addUser(name, email, hash, phone_number, billing_info, profile_link) {
+export async function addUser(name, email, hash, phone_number, profile_link) {
     const [result] = await pool.query(
-        "INSERT INTO Users (name, email, password, phone_number, billing_info, profile_link) VALUES (?, ?, ?, ?, ?, ?)",
-        [name, email, hash, phone_number ?? null, billing_info ?? null, profile_link ?? null]
+        "INSERT INTO Users (name, email, password, phone_number, profile_link) VALUES (?, ?, ?, ?, ?)",
+        [name, email, hash, phone_number ?? null, profile_link ?? null]
     );
     return result;
 }
 
-export async function updateUser(id, name, email, hash, phone_number, billing_info, profile_link) {
+export async function updateUser(id, name, email, hash, phone_number, profile_link) {
     const [result] = await pool.query(
-        "UPDATE Users SET name = ?, email = ?, password = ?, phone_number = ?, billing_info = ?, profile_link = ? WHERE user_id = ?",
-        [name, email, hash, phone_number ?? null, billing_info ?? null, profile_link ?? null, id]
+        "UPDATE Users SET name = ?, email = ?, password = ?, phone_number = ?, profile_link = ? WHERE user_id = ?",
+        [name, email, hash, phone_number ?? null, profile_link ?? null, id]
     );
     return result;
 }

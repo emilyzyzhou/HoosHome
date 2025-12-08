@@ -9,7 +9,6 @@ import profileSettingsRoutes from "./routes/profile-settings.js";
 
 import choreRoutes from "./routes/chores.js";
 import billsRoutes from "./routes/bills.js";
-
 import { pool } from "./db/pool.js";
 import { loginLimiter, generalLimiter } from "./middleware/rateLimiter.js";
 

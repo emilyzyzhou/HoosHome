@@ -39,6 +39,7 @@ router.post("/join", async (req, res) => {
         .status(400)
         .json({ success: false, message: "Join code is required." });
     }
+    
 
     // Find home by join code
     const home = await getHomeByJoinCode(joinCode);
@@ -48,13 +49,14 @@ router.post("/join", async (req, res) => {
         .status(404)
         .json({ success: false, message: "Invalid join code." });
     }
+    const today = new Date().toISOString().split('T')[0];
 
     // Insert or ensure membership for this user in this home
-    await addUserToHome(home[0].home_id, userId, new Date().toISOString(), null);
+    await addUserToHome(home[0].home_id, userId, today, null);
 
-    console.log("User joined home:", { userId, homeId: home.id });
+    console.log("User joined home:", { userId, homeId: home[0].home_id });
 
-    return res.json({ success: true, home_id: home.id });
+    return res.json({ success: true, home_id: home[0].home_id });
   } catch (error) {
     console.error("Home Join Error:", error);
   }
@@ -89,9 +91,10 @@ router.post("/create-home", async (req, res) => {
     // Insert new home
     const result = await addHome(joinCode, homeName, homeAddress);
     const insertId = result.insertId;
+    const today = new Date().toISOString().split('T')[0];
 
     // Insert membership for the creator
-    await addUserToHome(insertId, userId, new Date().toISOString(), null);
+    await addUserToHome(insertId, userId, today, null);
 
     const affectedRows = result.affectedRows;
 

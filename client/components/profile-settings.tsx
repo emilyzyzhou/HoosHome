@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { User, AlertCircle, Mail, CreditCard, Phone, CheckCircle2, Lock, Trash } from "lucide-react"; 
+import { User, AlertCircle, Mail, CreditCard, Phone, CheckCircle2, Lock, Trash, Globe } from "lucide-react"; 
 import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
 
@@ -75,8 +75,10 @@ function AccountDetails() {
   const [currentName, setCurrentName] = useState("");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
-  const [billingInfo, setBillingInfo] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
+  const [paymentMethod, setPaymentMethod] = useState<"Venmo" | "Zelle" | "PayPal" | "">("");
+  const [paymentHandle, setPaymentHandle] = useState("");
+  const [socialLink, setSocialLink] = useState("");
 
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState("");
@@ -102,8 +104,10 @@ function AccountDetails() {
           setCurrentName(data.user_info.name);
           setName(data.user_info.name);
           setEmail(data.user_info.email ?? "");
-          setBillingInfo(data.user_info.bill_info ?? "");
           setPhoneNumber(data.user_info.phone_number ?? "");
+          setPaymentMethod(data.user_info.payment_method ?? "");
+          setPaymentHandle(data.user_info.payment_handle ?? "");
+          setSocialLink(data.user_info.prof_link ?? "");
         } else {
           setError("Error loading profile. You aren't signed in, perhaps?");
         }
@@ -151,8 +155,19 @@ function AccountDetails() {
       return;
     }
 
-    if (billingInfo.length > 255) {
-      setError("Your billing info is too long.");
+    if (paymentHandle.length > 100) {
+      setError("Your payment handle is too long.");
+      return;
+    }
+
+    if(socialLink.length > 255) {
+        setError("Your social link is too long.");
+        return;
+    }
+
+    // Validate payment info - both or neither must be filled
+    if ((paymentMethod && !paymentHandle) || (!paymentMethod && paymentHandle)) {
+      setError("Please provide both Payment Method and Payment Handle, or leave both empty.");
       return;
     }
 
@@ -162,7 +177,7 @@ function AccountDetails() {
         method: "POST",
         credentials: "include",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, email, phoneNumber, billingInfo }),
+        body: JSON.stringify({ name, email, phoneNumber, paymentMethod, paymentHandle, socialLink }),
       });
 
       if (!res.ok) {
@@ -263,20 +278,60 @@ function AccountDetails() {
         </div>
 
         <div className="space-y-2">
-        <label htmlFor="billingInfo" className="text-sm font-semibold text-blue-900 dark:text-orange-200">
-            Billing Information
+        <label htmlFor="paymentMethod" className="text-sm font-semibold text-blue-900 dark:text-orange-200">
+            Payment Method
+        </label>
+        <div className="relative">
+            <CreditCard className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none z-10" />
+            <select
+                id="paymentMethod"
+                value={paymentMethod}
+                onChange={(e) => setPaymentMethod(e.target.value as "Venmo" | "Zelle" | "PayPal" | "")}
+                className="w-full h-10 px-3 pl-10 bg-orange-50 dark:bg-blue-900/30 border border-orange-200 dark:border-blue-800 rounded-md focus:ring-orange-500 dark:focus:ring-orange-400 text-blue-900 dark:text-white appearance-none cursor-pointer"
+                disabled={isLoading}
+            >
+                <option value="">Select payment method</option>
+                <option value="Venmo">Venmo</option>
+                <option value="Zelle">Zelle</option>
+                <option value="PayPal">PayPal</option>
+            </select>
+        </div>
+        </div>
+
+        <div className="space-y-2">
+        <label htmlFor="paymentHandle" className="text-sm font-semibold text-blue-900 dark:text-orange-200">
+            Payment Handle
         </label>
         <div className="relative">
             <CreditCard className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
             <Input
-            id="billingInfo"
+            id="paymentHandle"
             type="text"
-            placeholder="e.g. Venmo: @hooshome"
-            value={billingInfo}
-            onChange={(e) => setBillingInfo(e.target.value)}
+            placeholder="@username or email"
+            value={paymentHandle}
+            onChange={(e) => setPaymentHandle(e.target.value)}
             className="pl-10 bg-orange-50 dark:bg-blue-900/30 border-orange-200 dark:border-blue-800 focus:ring-orange-500 dark:focus:ring-orange-400 text-blue-900 dark:text-white"
             disabled={isLoading}
-            maxLength={255}
+            maxLength={100}
+            />
+        </div>
+        </div>
+
+        <div className="space-y-2">
+        <label htmlFor="socialLink" className="text-sm font-semibold text-blue-900 dark:text-orange-200">
+            Socials Link
+        </label>
+        <div className="relative">
+            <Globe className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+            <Input
+            id="socialLink"
+            type="text"
+            placeholder="e.g. https://www.linkedin.com/in/you"
+            value={socialLink}
+            onChange={(e) => setSocialLink(e.target.value)}
+            className="pl-10 bg-orange-50 dark:bg-blue-900/30 border-orange-200 dark:border-blue-800 focus:ring-orange-500 dark:focus:ring-orange-400 text-blue-900 dark:text-white"
+            disabled={isLoading}
+            maxLength={100}
             />
         </div>
         </div>
