@@ -107,8 +107,14 @@ router.post("/rsvp", async (req, res) => {
 	try {
 		const { event_id, rsvp_status } = req.body || {};
 
-		// try update; if no rows affected, insert
-		await updateEventInvite(event_id, userID, rsvp_status);
+		// Try update; if no rows affected, insert
+		const result = await updateEventInvite(event_id, userID, rsvp_status);
+		
+		// If no rows were updated, the invite doesn't exist, so insert it
+		if (result.affectedRows === 0) {
+			await inviteUserToEvent(event_id, userID, rsvp_status);
+		}
+		
 		return res.json({ success: true });
 	} catch (e) {
 		console.error("Couldn't RSVP: ", e);

@@ -6,7 +6,7 @@ import { Footer } from "@/components/footer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Plus, RefreshCw, Calendar, Trash2, X, Pencil, AlertCircle, Users } from "lucide-react";
+import { Plus, RefreshCw, Calendar, Trash2, X, Pencil, AlertCircle, Users, ChevronDown, ChevronRight, User } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 
 interface Event {
@@ -15,6 +15,13 @@ interface Event {
   description: string
   event_start: string
   event_end: string
+  rsvp_status: string
+  is_creator?: boolean
+}
+
+interface Invitee {
+  user_id: number
+  name: string
   rsvp_status: string
 }
 
@@ -36,6 +43,8 @@ export default function EventPage() {
   const [roommates, setRoommates] = useState<Array<{ user_id: number; name: string }>>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [createError, setCreateError] = useState("");
+  const [expandedEvents, setExpandedEvents] = useState<Set<number>>(new Set());
+  const [eventInvitees, setEventInvitees] = useState<Map<number, Invitee[]>>(new Map());
 
   const fetchEvents = async () => {
     setLoading(true);
@@ -107,6 +116,31 @@ export default function EventPage() {
       newSelected.add(userId)
     }
     setSelectedInvites(newSelected)
+  }
+
+  const toggleEventExpanded = async (eventId: number) => {
+    const newExpanded = new Set(expandedEvents)
+    if (newExpanded.has(eventId)) {
+      newExpanded.delete(eventId)
+    } else {
+      newExpanded.add(eventId)
+      // Fetch invitees if not already loaded
+      if (!eventInvitees.has(eventId)) {
+        try {
+          const res = await fetch(
+            `${process.env.NEXT_PUBLIC_API_BASE}/events/get-rsvp-statuses?event_id=${eventId}`,
+            { credentials: "include" }
+          )
+          if (res.ok) {
+            const data = await res.json()
+            setEventInvitees(new Map(eventInvitees).set(eventId, data.invites || []))
+          }
+        } catch (err) {
+          console.error("Failed to fetch invitees", err)
+        }
+      }
+    }
+    setExpandedEvents(newExpanded)
   }
 
   const handleCreate = async () => {
@@ -207,7 +241,7 @@ export default function EventPage() {
 
   const handleRsvp = async (eventId: number, rsvp: string) => {
     try {
-      await fetch(
+      const res = await fetch(
         `${process.env.NEXT_PUBLIC_API_BASE}/events/rsvp`,
         {
         method: "POST",
@@ -215,10 +249,16 @@ export default function EventPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ event_id: eventId, rsvp_status: rsvp }),
         }
-        );
-      fetchEvents()
+      );
+      
+      if (res.ok) {
+        // Force a full page reload to refresh all data
+        window.location.reload()
+      } else {
+        console.error("Failed to update RSVP")
+      }
     } catch (err) {
-        console.error("Something went wrong with RSVP :/ ", error)
+        console.error("Something went wrong with RSVP :/ ", err)
     }
   }
 
@@ -287,94 +327,155 @@ export default function EventPage() {
                     </tr>
                   )}
                   
-                  {!loading && invitedToEvents.map(evt => (
-                    <tr key={evt.event_id} className="border-b border-orange-100 dark:border-blue-800 hover:bg-orange-50 dark:hover:bg-blue-900/10">
-                      <td className="p-4">
-                        <div className="font-medium">{evt.title}</div>
-                        {evt.description && <div className="text-xs text-muted-foreground mt-1">{evt.description}</div>}
-                      </td>
-                      <td className="p-4 text-sm">
-                        <div className="flex items-center gap-2">
-                          <Calendar className="w-4 h-4" />
-                          {new Date(evt.event_start).toLocaleString()}
-                        </div>
-                      </td>
-                      <td className="p-4 text-sm">Invited</td>
-                      <td className="p-4 text-sm">
-                        <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-800">
-                          {evt.rsvp_status}
-                        </span>
-                      </td>
-                      <td className="p-4 text-center">
-                        <div className="flex gap-3 justify-center text-sm">
-                          <button
-                            onClick={() => handleRsvp(evt.event_id, 'Accepted')}
-                            className="text-green-700 hover:underline"
-                          >
-                            Accept
-                          </button>
-                          <button
-                            onClick={() => handleRsvp(evt.event_id, 'Tentative')}
-                            className="text-blue-700 hover:underline"
-                          >
-                            Not Yet
-                          </button>
-                          <button
-                            onClick={() => handleRsvp(evt.event_id, 'Declined')}
-                            className="text-red-600 hover:underline"
-                          >
-                            Decline
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                  
-                  {!loading && createdEvents.map(evt => (
-                    <tr key={evt.event_id} className="border-b border-orange-100 dark:border-blue-800 hover:bg-orange-50 dark:hover:bg-blue-900/10">
-                      <td className="p-4">
-                        <div className="font-medium">{evt.title}</div>
-                        {evt.description && <div className="text-xs text-muted-foreground mt-1">{evt.description}</div>}
-                      </td>
-                      <td className="p-4 text-sm">
-                        <div className="flex items-center gap-2">
-                          <Calendar className="w-4 h-4" />
-                          {new Date(evt.event_start).toLocaleString()}
-                        </div>
-                      </td>
-                      <td className="p-4 text-sm">Created</td>
-                      <td className="p-4 text-sm">
-                        <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400">
-                          Organizer
-                        </span>
-                      </td>
-                      <td className="p-4 text-center">
-                        <div className="flex items-center justify-center gap-2">
-                          <button
-                            onClick={() => {
-                              setEditingEventId(evt.event_id);
-                              setTitle(evt.title);
-                              setDescription(evt.description || "");
-                              setStart(evt.event_start ? new Date(evt.event_start).toISOString().slice(0, 16) : "");
-                              setEnd(evt.event_end ? new Date(evt.event_end).toISOString().slice(0, 16) : "");
-                              setIsEditOpen(true);
-                            }}
-                            className="p-2 hover:bg-blue-100 dark:hover:bg-blue-900/20 rounded text-blue-600 dark:text-blue-400 transition-colors"
-                            title="Edit event"
-                          >
-                            <Pencil className="w-4 h-4" />
-                          </button>
-                          <button
-                            onClick={() => handleDelete(evt.event_id)}
-                            className="p-2 hover:bg-red-100 dark:hover:bg-red-900/20 rounded text-red-600 dark:text-red-400 transition-colors"
-                            title="Delete event"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
+                  {!loading && (() => {
+                    // Combine and deduplicate events
+                    const allEvents = new Map<number, Event & { is_creator: boolean }>()
+                    
+                    // Add created events
+                    createdEvents.forEach(evt => {
+                      allEvents.set(evt.event_id, { ...evt, is_creator: true })
+                    })
+                    
+                    // Add invited events (only if not already added as creator)
+                    invitedToEvents.forEach(evt => {
+                      if (!allEvents.has(evt.event_id)) {
+                        allEvents.set(evt.event_id, { ...evt, is_creator: false })
+                      }
+                    })
+                    
+                    return Array.from(allEvents.values()).map(evt => (
+                      <React.Fragment key={evt.event_id}>
+                        <tr className="border-b border-orange-100 dark:border-blue-800 hover:bg-orange-50 dark:hover:bg-blue-900/10">
+                          <td className="p-4">
+                            <div className="flex items-center gap-2">
+                              <button
+                                onClick={() => toggleEventExpanded(evt.event_id)}
+                                className="p-1 hover:bg-orange-200 dark:hover:bg-blue-800 rounded transition-colors"
+                              >
+                                {expandedEvents.has(evt.event_id) ? (
+                                  <ChevronDown className="w-4 h-4" />
+                                ) : (
+                                  <ChevronRight className="w-4 h-4" />
+                                )}
+                              </button>
+                              <div>
+                                <div className="font-medium">{evt.title}</div>
+                                {evt.description && <div className="text-xs text-muted-foreground mt-1">{evt.description}</div>}
+                              </div>
+                            </div>
+                          </td>
+                          <td className="p-4 text-sm">
+                            <div className="flex items-center gap-2">
+                              <Calendar className="w-4 h-4" />
+                              {new Date(evt.event_start).toLocaleString()}
+                            </div>
+                          </td>
+                          <td className="p-4 text-sm">{evt.is_creator ? 'Created' : 'Invited'}</td>
+                          <td className="p-4 text-sm">
+                            <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold ${
+                              evt.is_creator
+                                ? "bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400"
+                                : evt.rsvp_status === 'Accepted'
+                                ? "bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400"
+                                : evt.rsvp_status === 'Declined'
+                                ? "bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400"
+                                : "bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-400"
+                            }`}>
+                              {evt.is_creator ? 'Organizer' : evt.rsvp_status}
+                            </span>
+                          </td>
+                          <td className="p-4 text-center">
+                            {evt.is_creator ? (
+                              <div className="flex items-center justify-center gap-2">
+                                <button
+                                  onClick={() => {
+                                    setEditingEventId(evt.event_id);
+                                    setTitle(evt.title);
+                                    setDescription(evt.description || "");
+                                    setStart(evt.event_start ? new Date(evt.event_start).toISOString().slice(0, 16) : "");
+                                    setEnd(evt.event_end ? new Date(evt.event_end).toISOString().slice(0, 16) : "");
+                                    setIsEditOpen(true);
+                                  }}
+                                  className="p-2 hover:bg-blue-100 dark:hover:bg-blue-900/20 rounded text-blue-600 dark:text-blue-400 transition-colors"
+                                  title="Edit event"
+                                >
+                                  <Pencil className="w-4 h-4" />
+                                </button>
+                                <button
+                                  onClick={() => handleDelete(evt.event_id)}
+                                  className="p-2 hover:bg-red-100 dark:hover:bg-red-900/20 rounded text-red-600 dark:text-red-400 transition-colors"
+                                  title="Delete event"
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                </button>
+                              </div>
+                            ) : (
+                              <div className="flex gap-2 justify-center text-xs">
+                                <button
+                                  onClick={() => handleRsvp(evt.event_id, 'Accepted')}
+                                  className="px-3 py-1.5 border-2 border-green-600 text-green-700 hover:bg-green-100 rounded font-medium transition-colors"
+                                >
+                                  Accept
+                                </button>
+                                <button
+                                  onClick={() => handleRsvp(evt.event_id, 'Tentative')}
+                                  className="px-3 py-1.5 border-2 border-blue-600 text-blue-700 hover:bg-blue-100 rounded font-medium transition-colors"
+                                >
+                                  Maybe
+                                </button>
+                                <button
+                                  onClick={() => handleRsvp(evt.event_id, 'Declined')}
+                                  className="px-3 py-1.5 border-2 border-red-600 text-red-600 hover:bg-red-100 rounded font-medium transition-colors"
+                                >
+                                  Decline
+                                </button>
+                              </div>
+                            )}
+                          </td>
+                        </tr>
+                        
+                        {expandedEvents.has(evt.event_id) && eventInvitees.has(evt.event_id) && (
+                          <tr key={`${evt.event_id}-invitees`}>
+                            <td colSpan={5} className="p-0">
+                              <div className="bg-orange-50 dark:bg-blue-900/10 p-4">
+                                <div className="text-sm font-semibold text-blue-900 dark:text-orange-200 mb-3 flex items-center gap-2">
+                                  <Users className="w-4 h-4" />
+                                  Invitees
+                                </div>
+                                <table className="w-full">
+                                  <thead>
+                                    <tr className="text-xs text-muted-foreground">
+                                      <th className="text-left pb-2">Name</th>
+                                      <th className="text-left pb-2">RSVP Status</th>
+                                    </tr>
+                                  </thead>
+                                  <tbody>
+                                    {eventInvitees.get(evt.event_id)?.map((invitee) => (
+                                      <tr key={invitee.user_id} className="text-sm">
+                                        <td className="py-1 flex items-center gap-2">
+                                          <User className="w-3 h-3 text-muted-foreground" />
+                                          {invitee.name}
+                                        </td>
+                                        <td className="py-1">
+                                          <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs ${
+                                            invitee.rsvp_status === 'Accepted' ? 'bg-green-100 text-green-800' :
+                                            invitee.rsvp_status === 'Declined' ? 'bg-red-100 text-red-800' :
+                                            'bg-blue-100 text-blue-800'
+                                          }`}>
+                                            {invitee.rsvp_status}
+                                          </span>
+                                        </td>
+                                      </tr>
+                                    ))}
+                                  </tbody>
+                                </table>
+                              </div>
+                            </td>
+                          </tr>
+                        )}
+                      </React.Fragment>
+                    ))
+                  })()}
                 </tbody>
               </table>
             </div>

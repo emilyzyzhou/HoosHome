@@ -2,7 +2,7 @@ import { pool } from "./pool.js";
 
 export async function getUsersInvitedToEvent(event_id) {
     const [result] = await pool.query(
-        "SELECT ei.*, u.name AS invitee_name FROM EventInvite AS ei INNER JOIN User AS u ON ei.user_id=u.user_id WHERE ei.event_id = ?",
+        "SELECT ei.event_id, ei.user_id, ei.rsvp_status, u.name FROM EventInvite AS ei INNER JOIN Users AS u ON ei.user_id=u.user_id WHERE ei.event_id = ?",
         [event_id]
     );
     return result;
