@@ -10,7 +10,15 @@ export async function getUsersInvitedToEvent(event_id) {
 
 export async function getEventsUserIsInvitedTo(user_id) {
     const [result] = await pool.query(
-        "SELECT ei.*, e.title AS event_title, e.event_start, e.event_end FROM EventInvite AS ei INNER JOIN Event AS e ON ei.event_id=e.event_id WHERE ei.user_id = ?",
+        "SELECT ei.*, e.title, e.description, e.event_start, e.event_end FROM EventInvite AS ei INNER JOIN Event AS e ON ei.event_id=e.event_id WHERE ei.user_id = ?",
+        [user_id]
+    );
+    return result;
+}
+
+export async function getEventsUserCreated(user_id) {
+    const [result] = await pool.query(
+        "SELECT ei.*, e.event_id, e.title, e.description, e.event_start, e.event_end FROM EventInvite AS ei RIGHT JOIN Event AS e ON ei.event_id=e.event_id WHERE e.created_by_user_id = ?",
         [user_id]
     );
     return result;
