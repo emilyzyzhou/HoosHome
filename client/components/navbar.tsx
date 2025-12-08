@@ -113,6 +113,12 @@ export function Navbar() {
                   Bills
                 </Link>
                 <Link
+                  href="/events"
+                  className="inline-flex items-center justify-center rounded-md text-sm font-semibold transition-colors bg-gradient-to-r from-blue-900 to-blue-800 hover:from-blue-800 hover:to-blue-700 text-white shadow-lg h-9 px-4"
+                >
+                  Events
+                </Link>
+                <Link
                   href="/profile-settings"
                   className="inline-flex items-center justify-center rounded-md text-sm font-semibold transition-colors bg-gradient-to-r from-blue-900 to-blue-800 hover:from-blue-800 hover:to-blue-700 text-white shadow-lg h-9 px-4"
                 >
