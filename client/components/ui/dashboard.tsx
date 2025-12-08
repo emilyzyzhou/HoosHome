@@ -20,15 +20,15 @@ interface DashboardProps {
 }
 
 export default function Dashboard({ data }: DashboardProps) {
-  const { roommates, bills, events, chores, lease } = data;
+  const { roommates, bills, events, chores, lease, home_id } = data;
 
   return (
     <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
       <RoommatesPreview roommates={roommates} />
       <BillsPreview bills={bills} />
       <EventsPreview events={events} />
-      <ChoresPreview chores={chores} />
-      <LeasePreview lease={lease} />
+      <ChoresPreview chores={chores} homeId={home_id} />
+      <LeasePreview lease={lease} homeId={home_id} />
     </div>
   );
 }

@@ -151,6 +151,7 @@ router.get("/roommates", async (req, res) => {
     }
 
     const homeId = homes[0].home_id;
+    const joinCode = homes[0].join_code;
 
     const [roommates, ignoredBills, events, rawChores, leaseArray] = await Promise.all([
       getAllUsersInHome(homeId),
@@ -281,6 +282,8 @@ router.get("/roommates", async (req, res) => {
     }));
 
   return res.json({
+    home_id: homeId,
+    join_code: joinCode,
     roommates,
     bills,
     events: {
@@ -293,6 +296,31 @@ router.get("/roommates", async (req, res) => {
 
   } catch (error) {
     console.error("Dashboard Error:", error);
+    return res.status(500).json({ success: false, message: "Internal server error" });
+  }
+});
+
+// GET /home/users/:homeId - Get all users in a specific home
+router.get("/users/:homeId", async (req, res) => {
+  try {
+    const homeId = parseInt(req.params.homeId, 10);
+    
+    if (isNaN(homeId)) {
+      return res.status(400).json({ success: false, message: "Invalid home ID" });
+    }
+
+    const users = await getAllUsersInHome(homeId);
+    
+    return res.json({ 
+      success: true, 
+      users: users.map(u => ({
+        user_id: u.user_id,
+        name: u.name,
+        email: u.email
+      }))
+    });
+  } catch (error) {
+    console.error("Get Users Error:", error);
     return res.status(500).json({ success: false, message: "Internal server error" });
   }
 });

@@ -4,9 +4,10 @@ import { useEffect, useState } from "react";
 import Dashboard from "@/components/ui/dashboard";
 import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
+import { DashboardData } from "@/types/dashboard";
 
 export default function HomePage() {
-  const [data, setData] = useState(null);
+  const [data, setData] = useState<DashboardData | null>(null);
   const [error, setError] = useState(false);
 
   useEffect(() => {
@@ -55,13 +56,22 @@ export default function HomePage() {
 
         {data && (
           <>
-            <h1 className="text-4xl font-bold mb-6 leading-normal
-              bg-gradient-to-r from-blue-900 to-orange-600 
-              dark:from-orange-300 dark:to-amber-300 
-              bg-clip-text text-transparent"
-            >
-              My Home
-            </h1>
+            <div className="flex justify-between items-start mb-6">
+              <h1 className="text-4xl font-bold leading-normal
+                bg-gradient-to-r from-blue-900 to-orange-600 
+                dark:from-orange-300 dark:to-amber-300 
+                bg-clip-text text-transparent"
+              >
+                My Home
+              </h1>
+              
+              <div className="bg-white dark:bg-slate-800 border-2 border-orange-400 dark:border-amber-400 rounded-lg px-4 py-2 shadow-md">
+                <p className="text-sm text-gray-600 dark:text-gray-300 font-medium">Join Code</p>
+                <p className="text-2xl font-bold text-orange-600 dark:text-amber-400 font-mono tracking-wider">
+                  {data.join_code}
+                </p>
+              </div>
+            </div>
 
             <Dashboard data={data} />
           </>

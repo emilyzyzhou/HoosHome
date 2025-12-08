@@ -31,9 +31,9 @@ export function Navbar() {
             
             if (homeRes.ok) {
               const homeData = await homeRes.json()
-              if (homeData.homeId) {
-                console.log("Setting Home ID:", homeData.homeId)
-                setHomeId(homeData.homeId)
+              if (homeData.home_id) {
+                console.log("Setting Home ID:", homeData.home_id)
+                setHomeId(homeData.home_id)
               } else {
                 setHomeId(null)
               }
@@ -104,13 +104,18 @@ export function Navbar() {
                 >
                   Chores
                 </Link>
-                {/* NEW LEASE LINK */}
                 <Link
-                      href={`/lease?homeId=${homeId}`}
-                      className="inline-flex items-center justify-center rounded-md text-sm font-semibold transition-colors bg-gradient-to-r from-blue-900 to-blue-800 hover:from-blue-800 hover:to-blue-700 text-white shadow-lg h-9 px-4"
-                    >
-                    Lease 
-                  </Link>
+                  href={`/lease?homeId=${homeId}`}
+                  className="inline-flex items-center justify-center rounded-md text-sm font-semibold transition-colors bg-gradient-to-r from-blue-900 to-blue-800 hover:from-blue-800 hover:to-blue-700 text-white shadow-lg h-9 px-4"
+                >
+                  Lease 
+                </Link>
+                <Link
+                  href="/events"
+                  className="inline-flex items-center justify-center rounded-md text-sm font-semibold transition-colors bg-gradient-to-r from-blue-900 to-blue-800 hover:from-blue-800 hover:to-blue-700 text-white shadow-lg h-9 px-4"
+                >
+                  Events
+                </Link>
                 <Link
                   href="/bills"
                   className="inline-flex items-center justify-center rounded-md text-sm font-semibold transition-colors bg-gradient-to-r from-blue-900 to-blue-800 hover:from-blue-800 hover:to-blue-700 text-white shadow-lg h-9 px-4"

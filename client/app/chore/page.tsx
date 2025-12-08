@@ -15,12 +15,14 @@ function ChoreBoardPageContent() {
     const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
+        // If homeId is already in URL, we're done
         if (homeIdParam) {
             setHomeId(parseInt(homeIdParam, 10));
             setIsLoading(false);
             return;
         }
 
+        // Otherwise, fetch it from the backend
         const fetchHomeId = async () => {
             try {
                 const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/home/roommates`, {
@@ -35,6 +37,7 @@ function ChoreBoardPageContent() {
                 
                 if (data.home_id) {
                     setHomeId(data.home_id);
+                    // Update URL with homeId
                     router.replace(`/chore?homeId=${data.home_id}`);
                 } else {
                     setError('No home found. Please join a home first.');
