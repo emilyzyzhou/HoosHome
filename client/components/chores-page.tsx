@@ -257,9 +257,9 @@ export function ChorePage({homeId}: ChorePageProps) {
                                     className="w-full h-10 px-3 rounded-md border border-orange-200 dark:border-blue-800 bg-white dark:bg-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
                                 >
                                     <option value="all">All Statuses</option>
-                                    <option value="Pending">Pending</option>
-                                    <option value="In Progress">In Progress</option>
-                                    <option value="Complete">Complete</option>
+                                    <option value="pending">Pending</option>
+                                    <option value="in_progress">In Progress</option>
+                                    <option value="done">Done</option>
                                 </select>
                             </div>
 
@@ -356,17 +356,17 @@ export function ChorePage({homeId}: ChorePageProps) {
 
                                             {/* STATUS */}
                                             <div className="col-span-2 p-4">
-                                                {chore.status === 'Complete' ? (
+                                                {chore.status === 'done' ? (
                                                     <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400">
                                                         <CheckCircle className="w-3 h-3" />
-                                                        Complete
+                                                        Done
                                                     </span>
-                                                ) : chore.status === 'Pending' ? (
+                                                ) : chore.status === 'pending' ? (
                                                     <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold bg-orange-100 text-orange-800 dark:bg-orange-900/20 dark:text-orange-400">
                                                         <Loader2 className="w-3 h-3 animate-spin" />
                                                         Pending
                                                     </span>
-                                                ) : chore.status === 'In Progress' ? (
+                                                ) : chore.status === 'in_progress' ? (
                                                     <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-400">
                                                         <Loader2 className="w-3 h-3" />
                                                         In Progress

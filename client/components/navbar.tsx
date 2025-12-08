@@ -61,6 +61,7 @@ export function Navbar() {
         credentials: "include",
       })
       setIsLoggedIn(false)
+      setHomeId(null)
       router.push("/")
       router.refresh()
     } catch (e) {

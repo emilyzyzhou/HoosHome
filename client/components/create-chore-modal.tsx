@@ -46,7 +46,7 @@ export function CreateChoreModal({
   const [dueDate, setDueDate] = useState(chore?.due_date ? new Date(chore.due_date).toISOString().split('T')[0] : "")
   const [recurrence, setRecurrence] = useState(chore?.recurrence || "One-time")
   const [assignedUserId, setAssignedUserId] = useState<string>(chore?.user_id ? String(chore.user_id) : "")
-  const [status, setStatus] = useState(chore?.status || "Pending")
+  const [status, setStatus] = useState(chore?.status || "pending")
   
   // UI State
   const [error, setError] = useState("")
@@ -253,9 +253,9 @@ export function CreateChoreModal({
                     onChange={(e) => setStatus(e.target.value)}
                     className="w-full h-10 px-3 rounded-md border border-orange-200 dark:border-blue-800 bg-orange-50 dark:bg-blue-900/30 text-sm"
                   >
-                    <option value="Pending">Pending</option>
-                    <option value="In Progress">In Progress</option>
-                    <option value="Complete">Complete</option>
+                    <option value="pending">Pending</option>
+                    <option value="in_progress">In Progress</option>
+                    <option value="done">Done</option>
                   </select>
                 </div>
               )}

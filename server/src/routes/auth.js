@@ -99,7 +99,12 @@ router.get("/me", async (req, res) => {
 
 // POST /auth/logout
 router.post("/logout", (req, res) => {
-  res.clearCookie(TOKEN_COOKIE, { path: "/" });
+  res.clearCookie(TOKEN_COOKIE, { 
+    path: "/",
+    httpOnly: true,
+    secure: true,
+    sameSite: "none"
+  });
   res.json({ ok: true });
 });
 

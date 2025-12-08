@@ -11,7 +11,7 @@ export default function HomePage() {
   const [error, setError] = useState(false);
 
   useEffect(() => {
-    const API_BASE = process.env.NEXT_PUBLIC_API_BASE;
+    const API_BASE = 'https://hooshome-api-518521047014.us-east4.run.app';
 
     fetch(`${API_BASE}/home/roommates`, {
       method: "GET",
