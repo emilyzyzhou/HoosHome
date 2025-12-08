@@ -80,7 +80,9 @@ export interface Lease {
 }
 
 
-interface DashboardData {
+export interface DashboardData {
+  home_id: number;
+  join_code: string;
   roommates: Roommate[];
   bills: Bill[];
   events: {

@@ -61,7 +61,9 @@ export function ChorePage({homeId}: ChorePageProps) {
             if (!HOME_ID_TO_USE) return;
     
             try {
-                const res = await fetch(`${API_BASE_URL}/home/${HOME_ID_TO_USE}/users`);
+                const res = await fetch(`${API_BASE_URL}/home/users/${HOME_ID_TO_USE}`, {
+                    credentials: 'include'
+                });
                 const data = await res.json();
     
                 if (res.ok && data.success) {

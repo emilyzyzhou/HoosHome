@@ -1,25 +1,81 @@
 "use client"
 
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
 import { LeasePageComponent } from "@/components/lease-page";
-import { AlertCircle } from 'lucide-react';
+import { AlertCircle, Loader2 } from 'lucide-react';
 import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
 
 export default function LeasePage() {
     const searchParams = useSearchParams();
+    const router = useRouter();
     const homeIdParam = searchParams.get('homeId');
+    const [homeId, setHomeId] = useState<number | null>(homeIdParam ? parseInt(homeIdParam, 10) : null);
+    const [isLoading, setIsLoading] = useState(!homeIdParam);
+    const [error, setError] = useState<string | null>(null);
 
-    const homeId = homeIdParam ? parseInt(homeIdParam, 10) : null;
+    useEffect(() => {
+        // If homeId is already in URL, we're done
+        if (homeIdParam) {
+            setHomeId(parseInt(homeIdParam, 10));
+            setIsLoading(false);
+            return;
+        }
+
+        // Otherwise, fetch it from the backend
+        const fetchHomeId = async () => {
+            try {
+                const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/home/roommates`, {
+                    credentials: 'include'
+                });
+                
+                if (!res.ok) {
+                    throw new Error('Failed to fetch home data');
+                }
+                
+                const data = await res.json();
+                
+                if (data.home_id) {
+                    setHomeId(data.home_id);
+                    // Update URL with homeId
+                    router.replace(`/lease?homeId=${data.home_id}`);
+                } else {
+                    setError('No home found. Please join a home first.');
+                }
+            } catch (err) {
+                console.error('Error fetching home ID:', err);
+                setError('Failed to load home data. Please try again.');
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        fetchHomeId();
+    }, [homeIdParam, router]);
     
-    if (homeId === null) {
+    if (isLoading) {
+        return (
+            <div className="min-h-screen flex flex-col">
+                <Navbar />
+                <div className="flex-1 flex items-center justify-center p-4 bg-orange-50 dark:bg-slate-900">
+                    <div className="flex items-center gap-2 text-gray-600 dark:text-gray-300">
+                        <Loader2 className="w-5 h-5 animate-spin"/> Loading...
+                    </div>
+                </div>
+                <Footer />
+            </div>
+        );
+    }
+
+    if (error || homeId === null) {
         return (
             <div className="min-h-screen flex flex-col">
                 <Navbar />
                 <div className="flex-1 flex items-center justify-center p-4 bg-orange-50 dark:bg-slate-900">
                     <div className="p-6 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 rounded-lg flex items-center gap-2 border border-red-200">
                         <AlertCircle className="w-5 h-5"/> 
-                        Error: Home ID not found. Please access this page from your Home dashboard.
+                        {error || 'Error: Home ID not found. Please access this page from your Home dashboard.'}
                     </div>
                 </div>
                 <Footer />
